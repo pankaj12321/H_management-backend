@@ -1,0 +1,108 @@
+require('dotenv').config();
+const path = require('path');
+const express = require('express');
+const cors = require('cors');
+const connectDB = require('./src/config/db');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+connectDB();
+
+// CORS configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:2000',
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const requestMethod = req.method;
+  const requestHeaders = req.headers['access-control-request-headers'];
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, DELETE, PATCH, OPTIONS'
+    );
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Authorization, X-Requested-With'
+    );
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Length, X-Foo, X-Bar');
+    res.setHeader('Access-Control-Max-Age', '86400');
+
+    if (requestMethod === 'OPTIONS') {
+      if (requestHeaders) {
+        res.setHeader('Access-Control-Allow-Headers', requestHeaders);
+      }
+      return res.status(200).end();
+    }
+  }
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  next();
+});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.set('trust proxy', true);
+
+app.use((req, res, next) => {
+  const start = Date.now();
+  const { method, originalUrl } = req;
+  console.log(`\n➡️ HIT: ${method} ${originalUrl}`);
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`✅ DONE: ${method} ${originalUrl} -> ${res.statusCode} (${duration}ms)\n`);
+  });
+  next();
+});
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const apiRouter = express.Router();
+
+apiRouter.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
+});
+
+apiRouter.get('/welcome', (req, res) => {
+  res.status(200).send('Welcome to the h_management API server!');
+});
+
+app.use('/api', apiRouter);
+
+app.get('/', (req, res) => {
+  res.status(200).send('Welcome to the h_management API server!');
+});
+
+app.use((req, res) => {
+  const notFoundMessage = `Route not found: ${req.method} ${req.originalUrl}`;
+  console.error(`\n🔎 404 NOT FOUND`);
+  console.error(`📍 URL: ${req.method} ${req.originalUrl}`);
+  console.error(`📦 Headers:`, req.headers);
+  console.error(`🔎 404 END\n`);
+  return res.status(404).json({
+    title: 'Not Found',
+    message: notFoundMessage,
+  });
+});
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '..', 'client', 'build')));
+  app.get('*', (req, res) =>
+    res.sendFile(path.resolve(__dirname, '..', 'client', 'build', 'index.html'))
+  );
+}
+
+app.listen(PORT, () => {
+  console.log(`✅ Server running on PORT: ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+});
