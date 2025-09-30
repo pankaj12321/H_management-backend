@@ -1,34 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const userRouter = require("./auth");
+const adminRouter = require("./admin");
 
 
 
 const defaultRoutes = [
-//   {
-//     path: "/api/admin",
-//     route: adminRouter,
-//   },
+
   {
-    path: "/api/user",
-    route: userRouter,
+    path: "/admin",
+    route: adminRouter,
   }
-//   {
-//     path:"/api/quran",
-//     route:quranRouter
-//   },
-//   {
-//     path:"/api/teacher",
-//     route:teacherRouter
-//   },
-//   {
-//     path:"/api/student",
-//     route:studentRouter
-//   },
-//   {
-//     path:"/api/review",
-//     route:reviewRouter
-//   }
+
 
 ];
 
