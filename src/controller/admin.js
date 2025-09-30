@@ -35,50 +35,38 @@ const hotelStaffCredentials = [
   },
 ];
 
-
-
 const handleToLoginByAdmin = asyncHandler(async (req, res) => {
   try {
-    const payload = req.body;
+    const { UserName, Password, HBranchName } = req.body;
 
-    if (!payload.UserName || !payload.Password || !payload.HBranchName) {
+    if (!UserName || !Password || !HBranchName) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const validAdmin = hotelStaffCredentials.find(
       (admin) =>
-        admin.UserName === payload.UserName &&
-        admin.HBranchName === payload.HBranchName
+        admin.UserName === UserName &&
+        admin.Password === Password &&   
+        admin.HBranchName === HBranchName
     );
 
     if (!validAdmin) {
-      return res.status(401).json({ message: "Invalid username or branch" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     let findAdminInDB = await Admin.findOne({
-      UserName: payload.UserName,
-      HBranchName: payload.HBranchName,
+      UserName,
+      HBranchName,
     });
 
     if (!findAdminInDB) {
-      const hashedPassword = await bcrypt.hash(payload.Password, 10);
-
       findAdminInDB = new Admin({
         adminId: entityIdGenerator("ADMIN"),
-        UserName: payload.UserName,
-        Password: hashedPassword,
-        HBranchName: payload.HBranchName,
+        UserName,
+        Password, 
+        HBranchName,
       });
-
       await findAdminInDB.save();
-    } else {
-      const isMatch = await bcrypt.compare(
-        payload.Password,
-        findAdminInDB.Password
-      );
-      if (!isMatch) {
-        return res.status(401).json({ message: "Invalid password" });
-      }
     }
 
     const token = jwt.sign(
@@ -98,7 +86,7 @@ const handleToLoginByAdmin = asyncHandler(async (req, res) => {
         UserName: findAdminInDB.UserName,
         HBranchName: findAdminInDB.HBranchName,
         role: "admin",
-        token: token
+        token: token,
       },
     });
   } catch (err) {
