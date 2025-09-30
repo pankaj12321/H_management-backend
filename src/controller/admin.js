@@ -137,7 +137,7 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
 
   }
   catch (err) {
-    console.error("Error in Admin Login:", err);
+    console.error("Error in for adding drivers by admin:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
