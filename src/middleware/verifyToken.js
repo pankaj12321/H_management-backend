@@ -1,36 +1,32 @@
 const jwt = require('jsonwebtoken');
 const redis = require('../config/redis');
 
-const verifyTokenHandle = async (req, res, next) => {
-    const authTokenHeader = req.headers.Authorization || req.headers.authorization;
-  
-    if (!authTokenHeader) {
-      const error = new Error('Unauthorized, Token Required!');
-      error.statusCode = 401; 
-      return next(error); 
+
+const verifyToken = (req, res, next) => {
+  try {
+    const authHeader = req.headers["authorization"];
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "No token provided or invalid format" });
     }
-  
-    if (authTokenHeader && authTokenHeader.startsWith('Bearer ')) {
-      let token = authTokenHeader.split('Bearer ')[1]
-      if (token) {
-        return jwt.verify(token, process.env.TOKEN_SECRET_KEY, function (err, decoded) {
-          if (err) {
-            const error = new Error('Failed to authenticate token, Invalid token');
-            error.statusCode = 401; 
-            return next(error); 
-          }
-  
-          req.user = decoded; 
-          return next(); 
-  
-        });
+
+    const token = authHeader.split(" ")[1];
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(403).json({ message: "Invalid or expired token" });
       }
-    } else {
-      const error = new Error('Token format is invalid. Must be \'Bearer [token]\'');
-      error.statusCode = 401; 
-      return next(error); 
-    }
-  };
+
+      req.user = decoded;
+      next();
+    });
+  } catch (error) {
+    console.error("Error verifying token:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
 
   const deleteToken = async (req) => {
     try {
@@ -55,6 +51,6 @@ const verifyTokenHandle = async (req, res, next) => {
     }
   };
   module.exports = {
-    verifyTokenHandle,
+    verifyToken,
     deleteToken
 }

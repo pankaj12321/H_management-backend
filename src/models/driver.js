@@ -13,7 +13,7 @@ const driverSchema = new mongoose.Schema(
     carNumber:{
         type:String,
     },
-    mobileNumber:{
+    mobile:{
         type:String,
         unique:true,
     },

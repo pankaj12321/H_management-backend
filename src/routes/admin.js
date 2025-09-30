@@ -1,19 +1,21 @@
 const express = require("express");
-const { verifyTokenHandle } = require('../middleware/verifyToken');
-const router = express.Router();
+const { verifyToken}  =require("../middleware/verifyToken");
+const router = express.Router();require
 
 
 
 
 
-
-const { handleToLoginByAdmin } = require("../controller/admin");
+const {
+    handleToLoginByAdmin,
+    handleToAddTheDriverByAdmin,
+    handleToGetAllDriversByAdmin
+} = require("../controller/admin");
 
 router.post("/login", handleToLoginByAdmin);
+router.post("/add-driver", verifyToken, handleToAddTheDriverByAdmin);
 
-
-
-
+router.get("/get-drivers", verifyToken, handleToGetAllDriversByAdmin);
 
 
 
