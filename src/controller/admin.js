@@ -1,5 +1,6 @@
 require("dotenv").config();
 const Admin = require("../models/admin");
+
 const asyncHandler = require("express-async-handler");
 const { sendEmail, sendSms } = require("../services/service");
 const jwt = require("jsonwebtoken");
@@ -41,10 +42,10 @@ const handleToLoginByAdmin = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    // check static credentials first
     const validAdmin = hotelStaffCredentials.find(
       (admin) =>
         admin.UserName === payload.UserName &&
-        admin.Password === payload.Password &&
         admin.HBranchName === payload.HBranchName
     );
 
@@ -58,13 +59,20 @@ const handleToLoginByAdmin = asyncHandler(async (req, res) => {
     });
 
     if (!findAdminInDB) {
+      const hashedPassword = await bcrypt.hash(payload.Password, 10);
+
       findAdminInDB = new Admin({
         adminId: entityIdGenerator("ADMIN"),
         UserName: payload.UserName,
-        Password: payload.Password, 
+        Password: hashedPassword,
         HBranchName: payload.HBranchName,
       });
       await findAdminInDB.save();
+    } else {
+      const isMatch = await bcrypt.compare(payload.Password, findAdminInDB.Password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid password" });
+      }
     }
 
     const token = jwt.sign(
@@ -92,5 +100,7 @@ const handleToLoginByAdmin = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+
 
 module.exports = { handleToLoginByAdmin };
