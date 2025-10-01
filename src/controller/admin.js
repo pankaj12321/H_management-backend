@@ -46,7 +46,7 @@ const handleToLoginByAdmin = asyncHandler(async (req, res) => {
     const validAdmin = hotelStaffCredentials.find(
       (admin) =>
         admin.UserName === UserName &&
-        admin.Password === Password &&   
+        admin.Password === Password &&
         admin.HBranchName === HBranchName
     );
 
@@ -63,7 +63,7 @@ const handleToLoginByAdmin = asyncHandler(async (req, res) => {
       findAdminInDB = new Admin({
         adminId: entityIdGenerator("ADMIN"),
         UserName,
-        Password, 
+        Password,
         HBranchName,
       });
       await findAdminInDB.save();
@@ -107,21 +107,26 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
     if (!payload.name || !payload.carNumber || !payload.mobile || !payload.email || !payload.srNumber) {
       return res.status(400).json({ message: "Invalid Payload! All fields are required" });
     }
-    const existingDriver = await Driver.findOne({ srNumber: payload.srNumber, name: payload.name });
+    const existingDriver = await Driver.findOne({ srNumber: payload.srNumber });
     if (existingDriver) {
       return res.status(409).json({ message: "Driver already exists with this SR Number and Name" });
     }
-    const newDriver = new Driver({
-      driverId: entityIdGenerator("DRIVER"),
-      name: payload.name,
-      carNumber: payload.carNumber,
-      mobile: payload.mobile,
-      email: payload.email,
-      srNumber: payload.srNumber,
-      addedBy: decoded.user
-    });
-    await newDriver.save();
-    res.status(201).json({ message: "Driver added successfully", driver: newDriver });
+    if (!existingDriver) {
+      const newDriver = new Driver({
+        driverId: entityIdGenerator("DRIVER"),
+        name: payload.name,
+        carNumber: payload.carNumber,
+        mobile: payload.mobile,
+        email: payload.email,
+        srNumber: payload.srNumber,
+        addedBy: decoded.user
+      });
+      await newDriver.save();
+      res.status(201).json({ message: "Driver added successfully", driver: newDriver });
+    }
+    else {
+      res.status(500).json({ message: "Something went wrong! Please try again later." });
+    }
 
   }
   catch (err) {
