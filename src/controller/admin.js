@@ -104,12 +104,12 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
         .json({ message: "Forbidden! You are not authorized to add driver" });
     }
     const payload = req.body;
-    if (!payload.name || !payload.carNumber || !payload.mobile || !payload.email || !payload.srNumber) {
+    if (!payload.name || !payload.carNumber || !payload.mobile || !payload.srNumber) {
       return res.status(400).json({ message: "Invalid Payload! All fields are required" });
     }
     const existingDriver = await Driver.findOne({ srNumber: payload.srNumber });
     if (existingDriver) {
-      return res.status(409).json({ message: "Driver already exists with this SR Number and Name" });
+      return res.status(409).json({ message: "Driver already exists with this SR Number" });
     }
     if (!existingDriver) {
       const newDriver = new Driver({
