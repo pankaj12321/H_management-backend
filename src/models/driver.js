@@ -15,7 +15,6 @@ const driverSchema = new mongoose.Schema(
     },
     mobile:{
         type:String,
-        unique:true,
     },
     srNumber:{
         type:String,
