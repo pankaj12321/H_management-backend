@@ -204,6 +204,9 @@ const handleToGetAllDriversByAdmin = asyncHandler(async (req, res) => {
     if (query.email) {
       matchQuery.email = { $regex: query.email, $options: 'i' };
     }
+    {
+      query.driverId ? (matchQuery.driverId = query.driverId) : null;
+    }
     const drivers = await Driver.find(matchQuery).sort({ createdAt: -1 });
 
     if (!drivers || drivers.length === 0) {
