@@ -299,8 +299,8 @@ const handleToEditDriverCommisionEntryByAdmin = asyncHandler(async (req, res) =>
     }
 
     const { entryId, driverCommisionAmount, partyAmount, status, entryDate, driverId } = req.body;
-    if (!entryId) {
-      return res.status(400).json({ message: "entryId is required" });
+    if (!entryId||!driverId) {
+      return res.status(400).json({ message: "entryId and driverId are required" });
     }
 
     const commissionEntryDetails = await DriverCommisionEntry.findOne({ entryId , driverId });
