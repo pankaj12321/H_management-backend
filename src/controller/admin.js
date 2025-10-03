@@ -298,12 +298,12 @@ const handleToEditDriverCommisionEntryByAdmin = asyncHandler(async (req, res) =>
       });
     }
 
-    const { entryId, driverCommisionAmount, partyAmount, status, entryDate } = req.body;
+    const { entryId, driverCommisionAmount, partyAmount, status, entryDate, driverId } = req.body;
     if (!entryId) {
       return res.status(400).json({ message: "entryId is required" });
     }
 
-    const commissionEntryDetails = await DriverCommisionEntry.findOne({ entryId });
+    const commissionEntryDetails = await DriverCommisionEntry.findOne({ entryId , driverId });
     if (!commissionEntryDetails) {
       return res.status(404).json({ message: "Driver commission entry not found" });
     }
