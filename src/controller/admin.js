@@ -294,7 +294,7 @@ const handleToEditDriverCommisionEntryByAdmin = asyncHandler(async (req, res) =>
     const decoded = req.user; 
     if (!decoded) {
       return res.status(403).json({
-        message: "Forbidden! You are not authorized to edit driver commission entry",
+        message: "Forbidden! You are not authorized to edit driver commission entry", 
       });
     }
 

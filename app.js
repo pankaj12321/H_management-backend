@@ -15,6 +15,7 @@ const allowedOrigins = [
   'http://localhost:4200',
   'http://localhost:5174',
   'http://localhost:5000',
+   "https://blpoonmhotelandrestorent.netlify.app"
 ];
 
 app.use((req, res, next) => {
