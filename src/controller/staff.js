@@ -86,10 +86,13 @@ const handleToGetStaffListByAdmin = asyncHandler(async (req, res) => {
             matchQuery.staffId = { $regex: query.staffId, $options: 'i' };
         }
         const staffList = await Staff.find(matchQuery).sort({ createdAt: -1 });
+        const countStaffDocumnets = await Staff.countDocuments(matchQuery);
         if (!staffList || staffList.length === 0) {
             return res.status(404).json({ message: "No staff users found" });
         }
-        return res.status(200).json({ message: "Staff users fetched successfully", staffList: staffList });
+        return res.status(200).json({ message: "Staff users fetched successfully", staffList: staffList,
+        countStaffDocuments: countStaffDocuments
+        });
 
     }
     catch(err){
