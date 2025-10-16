@@ -8,6 +8,7 @@ const { createTokenHandler } = require("../services/authToken");
 const { entityIdGenerator } = require("../utils/entityGenerator")
 const redisClient = require("../config/redis");
 const Staff = require("../models/staff");
+const { genSalt } = require("bcrypt");
 
 const handleToAddStaffUserByAdmin = asyncHandler(async (req, res) => {
     try {
@@ -43,7 +44,7 @@ const handleToAddStaffUserByAdmin = asyncHandler(async (req, res) => {
                     state: payload.address.state || "",
                     country: payload.address.country || ""
                 },
-                DOB: payload.DOB, 
+                DOB: payload.DOB,
                 adharNumber: payload.adharNumber,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -60,7 +61,7 @@ const handleToAddStaffUserByAdmin = asyncHandler(async (req, res) => {
 })
 
 const handleToGetStaffListByAdmin = asyncHandler(async (req, res) => {
-    try{
+    try {
         const decodedToken = req.user;
         if (!decodedToken || decodedToken.role !== 'admin') {
             return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
@@ -82,7 +83,7 @@ const handleToGetStaffListByAdmin = asyncHandler(async (req, res) => {
         if (query.city) {
             matchQuery['address.city'] = { $regex: query.city, $options: 'i' };
         }
-        if(query.staffId){
+        if (query.staffId) {
             matchQuery.staffId = { $regex: query.staffId, $options: 'i' };
         }
         const staffList = await Staff.find(matchQuery).sort({ createdAt: -1 });
@@ -90,18 +91,102 @@ const handleToGetStaffListByAdmin = asyncHandler(async (req, res) => {
         if (!staffList || staffList.length === 0) {
             return res.status(404).json({ message: "No staff users found" });
         }
-        return res.status(200).json({ message: "Staff users fetched successfully", staffList: staffList,
+        return res.status(200).json({
+            message: "Staff users fetched successfully", staffList: staffList,
             countStaff: countStaffDocuments
         });
 
     }
-    catch(err){
+    catch (err) {
         console.error("Error in fetching Staff list:", err);
         res.status(500).json({ message: "Internal Server Error" });
     }
 })
 
+
+const handleToUpdateStaffByAdmin = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+        const payload = req.body;
+        if (!payload || Object.keys(payload).length === 0) {
+            return res.status(400).json({ message: "Bad Request: Missing or empty request body" });
+        }
+        if (!payload.staffId) {
+            return res.status(400).json({ message: "Bad Request: Missing required fields" });
+        }
+        const existingStaffUser = await Staff.findOne({ staffId: payload.staffId });
+        if (!existingStaffUser) {
+            return res.status(404).json({ message: "Staff user not found" });
+        }
+        if (existingStaffUser) {
+            const updatedStaff = await Staff.findOneAndUpdate(
+                { staffId: payload.staffId },
+                {
+                    $set: {
+                        firstName: payload.firstName || existingStaffUser.firstName,
+                        lastName: payload.lastName || existingStaffUser.lastName,
+                        email: payload.email || existingStaffUser.email,
+                        mobile: payload.mobile || existingStaffUser.mobile,
+                        age: payload.age || existingStaffUser.age,
+                        role: payload.role || existingStaffUser.role,
+                        gender: payload.gender || existingStaffUser.gender,
+                        address: {
+                            city: payload.address?.city || existingStaffUser.address.city,
+                            state: payload.address?.state || existingStaffUser.address.state,
+                            country: payload.address?.country || existingStaffUser.address.country
+                        },
+                        DOB: payload.DOB || existingStaffUser.DOB,
+                        adharNumber: payload.adharNumber || existingStaffUser.adharNumber,
+                        updatedAt: new Date()
+                    }
+                },
+                { new: true }
+            );
+            return res.status(200).json({ message: "Staff user updated successfully", updatedStaff: updatedStaff });
+        }
+    }
+    catch (err) {
+        console.error("Error in fetching Staff list:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+
+})
+
+const handleToDeleteTheStaffByAdmin = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+        const payload = req.body;
+        if (!payload || Object.keys(payload).length === 0) {
+            return res.status(400).json({ message: "Bad Request: Missing or empty request body" });
+        }
+        if (!payload.staffId) {
+            return res.status(400).json({ message: "Bad Request: Missing required fields" });
+        }
+        const existingStaffUser = await Staff.findOne({ staffId: payload.staffId });
+        if (!existingStaffUser) {
+            return res.status(404).json({ message: "Staff user not found" });
+        }
+        if (existingStaffUser) {
+            await Staff.deleteOne({ staffId: payload.staffId });
+            return res.status(200).json({ message: "Staff user deleted successfully" });
+        }
+    }
+    catch (err) {
+        console.error("Error in deleting Staff user:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+
+})
+
 module.exports = {
     handleToAddStaffUserByAdmin,
-    handleToGetStaffListByAdmin
+    handleToGetStaffListByAdmin,
+    handleToUpdateStaffByAdmin,
+    handleToDeleteTheStaffByAdmin
 }
