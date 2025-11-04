@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 const { createTokenHandler } = require("../services/authToken");
 const { entityIdGenerator } = require("../utils/entityGenerator")
 const redisClient = require("../config/redis");
-const {attendanceRecord }= require('../models/attendance')
+const { attendanceRecord } = require('../models/attendance')
 const Staff = require("../models/staff");
 
 
@@ -174,42 +174,47 @@ const handleToGetAttendanceOfStaff = async (req, res) => {
   }
 };
 
-const handleToUpdateTheAttendanceOfStaffByAdmin= async(req,res)=>{
-  try{
-    const decodedToken= req.user;
+const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
+  try {
+    const decodedToken = req.user;
 
-    if(!decodedToken || decodedToken.role.toLowerCase() !== "admin"){
-       return res.status(403).json({
+    if (!decodedToken || decodedToken.role.toLowerCase() !== "admin") {
+      return res.status(403).json({
         message: "Forbidden! You are not authorized to view attendance data.",
       });
     }
 
-    const payload= req.body;
-    if(!payload.staffId || !payload.date || !payload.month || !payload.year || !payload.attendance){
+    const payload = req.body;
+    if (!payload.staffId || !payload.date ||
+      !payload.month || !payload.year ||
+      !payload.attendance) {
       return res.status(400).json({
         message: "Bad Request! Please provide all required fields: date, month, year, staffId, and attendance.",
       });
     }
-   if(!["Present", "Absent", "Half Day"].includes(payload.attendance)){
+    if (!["Present", "Absent", "Half Day"].includes(payload.attendance)) {
       return res.status(400).json({
         message: "Bad Request! Invalid attendance status.",
       });
     }
-    const todaysDate= new Date();
-    if(payload.year > todaysDate.getFullYear() || (payload.year === todaysDate.getFullYear() && payload.month > (todaysDate.getMonth()+1)) || (payload.year === todaysDate.getFullYear() && payload.month === (todaysDate.getMonth()+1) && payload.date > todaysDate.getDate())){
+    const todaysDate = new Date();
+    if (payload.year > todaysDate.getFullYear() ||
+      (payload.year === todaysDate.getFullYear() && payload.month > (todaysDate.getMonth() + 1)) ||
+      (payload.year === todaysDate.getFullYear() && payload.month === (todaysDate.getMonth() + 1) &&
+      payload.date > todaysDate.getDate())) {
       return res.status(400).json({
         message: "Bad Request! Cannot update attendance for future dates.",
       });
     }
 
-    const attendanceDetails= await attendanceRecord.find({
+    const attendanceDetails = await attendanceRecord.find({
       staffId: payload.staffId,
       "attendanceDetails.date": payload.date,
       "attendanceDetails.month": payload.month,
       "attendanceDetails.year": payload.year,
     });
 
-    if(attendanceDetails.length===0){
+    if (attendanceDetails.length === 0) {
       return res.status(404).json({
         message: "Attendance record not found for the given details.",
       });
@@ -219,7 +224,7 @@ const handleToUpdateTheAttendanceOfStaffByAdmin= async(req,res)=>{
     //   record.attendanceDetails.attendance= payload.attendance;
     //   await record.save();
     // }
-      for (const record of attendanceDetails) {
+    for (const record of attendanceDetails) {
       record.attendanceDetails.attendance = payload.attendance;
       record.attendanceDetails.time = new Date().toLocaleTimeString("en-IN", {
         hour: "2-digit",
@@ -229,7 +234,7 @@ const handleToUpdateTheAttendanceOfStaffByAdmin= async(req,res)=>{
       record.attendanceStatus = "Edited";
       await record.save();
     }
-    attendanceDetails.updatedAt= new Date();
+    attendanceDetails.updatedAt = new Date();
 
     return res.status(200).json({
       message: "Attendance updated successfully.",
@@ -243,10 +248,10 @@ const handleToUpdateTheAttendanceOfStaffByAdmin= async(req,res)=>{
   }
 }
 
-module.exports={
-    handleToMarkAttendanceOfStaff,
-    handleToGetAttendanceOfStaff,
-    handleToUpdateTheAttendanceOfStaffByAdmin
+module.exports = {
+  handleToMarkAttendanceOfStaff,
+  handleToGetAttendanceOfStaff,
+  handleToUpdateTheAttendanceOfStaffByAdmin
 }
 
 
