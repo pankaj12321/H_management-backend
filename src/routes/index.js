@@ -3,6 +3,7 @@ const router = express.Router();
 const adminRouter = require("./admin");
 const staffRouter = require("./staff");
 const attendanceRouter= require('./attendence')
+const transectionRecordRouter = require('./transectionRecord');
 
 
 
@@ -19,8 +20,11 @@ const defaultRoutes = [
   {
     path:'/admin/attendance',
     route:attendanceRouter
+  },
+  {
+    path:'/admin',
+    route:transectionRecordRouter
   }
-
 
 ];
 

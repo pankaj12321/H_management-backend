@@ -25,11 +25,11 @@ const handleToMarkAttendanceOfStaff = async (req, res, next) => {
 
     if (
       !payload.staffId ||
-      !["Present", "Absent", "Half Day"].includes(attendanceValue)
+      !["Present", "Absent", "Half Day","Paid Leave"].includes(attendanceValue)
     ) {
       return res.status(400).json({
         message:
-          "Invalid Payload! 'staffId' and valid 'attendance' (Present/Absent/Half Day) are required.",
+          "Invalid Payload! 'staffId' and valid 'attendance' (Present/Absent/Half Day/Paid Leave) are required.",
       });
     }
 
@@ -192,7 +192,7 @@ const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
         message: "Bad Request! Please provide all required fields: date, month, year, staffId, and attendance.",
       });
     }
-    if (!["Present", "Absent", "Half Day"].includes(payload.attendance)) {
+    if (!["Present", "Absent", "Half Day","Paid Leave"].includes(payload.attendance)) {
       return res.status(400).json({
         message: "Bad Request! Invalid attendance status.",
       });
