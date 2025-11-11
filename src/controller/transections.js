@@ -7,7 +7,8 @@ const { entityIdGenerator } = require("../utils/entityGenerator")
 const redisClient = require("../config/redis");
 const TransactionalUser = require('../models/transectional_user')
 const TransectionUserRecord = require('../models/transectionRecord');
-const { query } = require("winston");
+const Earning= require('../models/expense_earning')
+const Expense= require('../models/expense_earning')
 
 const handleToCreateTransectionUser = async (req, res, next) => {
     try {
@@ -21,26 +22,21 @@ const handleToCreateTransectionUser = async (req, res, next) => {
 
         const payload = req.body;
 
-        if (!payload.name || !payload.email || !payload.mobile || !payload.address.city) {
+        if (!payload.name  || !payload.mobile) {
             return res.status(400).json({
                 message:
-                    "Invalid Payload! 'name', 'email', 'mobile', and 'address.city' are required.",
+                    "Invalid Payload! 'name', 'mobile' are required.",
             });
         }
         const existingUser = await TransactionalUser.findOne({ mobile: payload.mobile });
-        const existingMail = await TransactionalUser.findOne({ email: payload.email });
-        if (existingUser || existingMail) {
-            return res.status(409).json({ message: "Transection User with this mobile number or email already exists." });
+        if (existingUser) {
+            return res.status(409).json({ message: "Transection User with this mobile number already exists." });
         }
-        if (!existingUser && !existingMail) {
+        if (!existingUser) {
             const newTransectionUser = new TransactionalUser({
                 name: payload.name,
                 mobile: payload.mobile,
-                email: payload.email,
-                address: {
-                    city: payload.address.city,
-                    state: payload.address.state || ''
-                },
+                email: payload.email || '',             
                 transectionUserId: entityIdGenerator("TR"),
                 status: 'Active'
             });
@@ -89,7 +85,7 @@ const handleToGetTransectionUserListByAdmin = asyncHandler(async (req, res) => {
 });
 
 /* handle to make the transection between admin and transection user here is the apis for this
-functionalaity will be added later */
+functionality will be added later */
 
 const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res) => {
     try {
@@ -181,9 +177,49 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
 });
 
 
+// Api's for the for the hotel expense and Earning ----------------
+
+const handleToAddTheHotelExpense= asyncHandler(async(req,res)=>{
+    try{
+        const decodedToken = req.user;
+         if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+
+        const payload= req.body;
+        if(!payload || !payload.expenceAmount || !payload.expenceItems){
+            return res.status(400).json({
+                message: "Invalid Payload: expenceAmount and expenceItems are required"
+            });
+        }
+        const newExpense= new Expense({
+            expenseId: entityIdGenerator("EX"),
+            expenseAmount: payload.expenseAmount,
+            expenceItems: payload.expenceItems,
+            expenseDate: payload.expenseDate || new Date(),
+            paymentMode: payload.paymentMode || "cash"
+        });
+        await newExpense.save();
+        return res.status(201).json({
+            message: "Hotel Expense added successfully",
+            data: newExpense
+        });
+
+    }
+    catch (err) {
+        console.error("Error in adding hotel expense:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+})
+
 
 module.exports = {
     handleToCreateTransectionUser,
     handleToGetTransectionUserListByAdmin,
-    handleToMakeTransectionBetweenAdminAndUser
+    handleToMakeTransectionBetweenAdminAndUser,
+    handleToAddTheHotelExpense
 };
