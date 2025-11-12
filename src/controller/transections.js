@@ -7,8 +7,8 @@ const { entityIdGenerator } = require("../utils/entityGenerator")
 const redisClient = require("../config/redis");
 const TransactionalUser = require('../models/transectional_user')
 const TransectionUserRecord = require('../models/transectionRecord');
-const Earning= require('../models/expense_earning')
-const Expense= require('../models/expense_earning')
+const { Earning } = require('../models/expense_earning')
+const { Expense } = require('../models/expense_earning')
 
 const handleToCreateTransectionUser = async (req, res, next) => {
     try {
@@ -22,7 +22,7 @@ const handleToCreateTransectionUser = async (req, res, next) => {
 
         const payload = req.body;
 
-        if (!payload.name  || !payload.mobile) {
+        if (!payload.name || !payload.mobile) {
             return res.status(400).json({
                 message:
                     "Invalid Payload! 'name', 'mobile' are required.",
@@ -36,7 +36,7 @@ const handleToCreateTransectionUser = async (req, res, next) => {
             const newTransectionUser = new TransactionalUser({
                 name: payload.name,
                 mobile: payload.mobile,
-                email: payload.email || '',             
+                email: payload.email || '',
                 transectionUserId: entityIdGenerator("TR"),
                 status: 'Active'
             });
@@ -115,12 +115,12 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             transectionUserId: payload.transectionUserId
         });
 
-        if(!transectionUserRecord) {
+        if (!transectionUserRecord) {
             return res.status(404).json({
                 message: "Transection User not found"
             });
         }
-        if(transectionUserRecord){
+        if (transectionUserRecord) {
             let existingRecord = await TransectionUserRecord.findOne({
                 transectionUserId: payload.transectionUserId
             });
@@ -143,28 +143,28 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                     message: "Transaction updated successfully",
                     data: existingRecord
                 });
-            }   else {
-            let transectionRecord = new TransectionUserRecord({
-                transectionUserId: payload.transectionUserId,
-            })
-            if (payload.givenToAdmin) {
-                transectionRecord.givenToAdmin.push({
-                    Rs: payload.givenToAdmin.Rs
+            } else {
+                let transectionRecord = new TransectionUserRecord({
+                    transectionUserId: payload.transectionUserId,
+                })
+                if (payload.givenToAdmin) {
+                    transectionRecord.givenToAdmin.push({
+                        Rs: payload.givenToAdmin.Rs
+                    });
+                    transectionRecord.totalGiven += payload.givenToAdmin.Rs;
+                }
+                if (payload.takenFromAdmin) {
+                    transectionRecord.takenFromAdmin.push({
+                        Rs: payload.takenFromAdmin.Rs
+                    });
+                    transectionRecord.totalTaken += payload.takenFromAdmin.Rs;
+                }
+                await transectionRecord.save();
+                return res.status(200).json({
+                    message: "Transaction recorded successfully",
+                    data: transectionRecord
                 });
-                transectionRecord.totalGiven += payload.givenToAdmin.Rs;
             }
-            if (payload.takenFromAdmin) {
-                transectionRecord.takenFromAdmin.push({
-                    Rs: payload.takenFromAdmin.Rs
-                });
-                transectionRecord.totalTaken += payload.takenFromAdmin.Rs;
-            }
-            await transectionRecord.save();
-            return res.status(200).json({
-                message: "Transaction recorded successfully",
-                data: transectionRecord
-            });
-        }
 
         }
 
@@ -179,47 +179,130 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
 
 // Api's for the for the hotel expense and Earning ----------------
 
-const handleToAddTheHotelExpense= asyncHandler(async(req,res)=>{
-    try{
+const handleToAddTheHotelExpense = asyncHandler(async (req, res) => {
+    try {
         const decodedToken = req.user;
-         if (!decodedToken || decodedToken.role !== 'admin') {
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
             return res.status(403).json({
                 message: "Forbidden: invalid token/Unauthorized access"
             });
         }
 
-        const payload= req.body;
-        if(!payload || !payload.expenceAmount || !payload.expenceItems){
+        const payload = req.body;
+        if (!payload || !payload.expenseAmount || !payload.expenseItems) {
             return res.status(400).json({
-                message: "Invalid Payload: expenceAmount and expenceItems are required"
+                message: "Invalid Payload: expenseAmount and expenseItems are required"
             });
         }
-        const newExpense= new Expense({
+
+        const newExpense = new Expense({
             expenseId: entityIdGenerator("EX"),
             expenseAmount: payload.expenseAmount,
-            expenceItems: payload.expenceItems,
+            expenceItems: payload.expenseItems,
             expenseDate: payload.expenseDate || new Date(),
             paymentMode: payload.paymentMode || "cash"
         });
+
         await newExpense.save();
+
         return res.status(201).json({
             message: "Hotel Expense added successfully",
             data: newExpense
         });
 
-    }
-    catch (err) {
+    } catch (err) {
         console.error("Error in adding hotel expense:", err);
         return res.status(500).json({
             message: "Internal Server Error"
         });
     }
-})
+});
+
+const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+
+        const payload = req.body;
+        if (!payload || !payload.earningAmount || !payload.earningDetails) {
+            return res.status(400).json({
+                message: "Invalid Payload: earningAmount and earningDetails are required"
+            });
+        }
+
+        const newEarning = new Earning({
+            eariningId: entityIdGenerator("ER"),
+            earningAmount: payload.earningAmount,
+            earningDetails: payload.earningDetails,
+            earningDate: payload.earningDate || new Date(),
+            paymentMode: payload.paymentMode || "cash"
+        });
+
+        await newEarning.save();
+
+        return res.status(201).json({
+            message: "Hotel Earning added successfully",
+            data: newEarning
+        });
+
+    }
+    catch (err) {
+        console.error("Error in adding hotel earning:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+});
+
+
+const handleToGetEarningandExpenseReport = asyncHandler(async (req, res) => {
+    try{
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+        const earnings = await Earning.find({});
+        const expenses = await Expense.find({});
+
+        const totalMonthlyEarnings = earnings.reduce((total, earning) => total + earning.earningAmount, 0);
+        const totalMonthlyExpenses = expenses.reduce((total, expense) => total + expense.expenseAmount, 0);
+
+        return res.status(200).json({
+            message: "Earning and Expense Report fetched successfully",
+            data: {
+                earnings,
+                expenses,
+                totalMonthlyEarnings,
+                totalMonthlyExpenses
+            }
+        });
+
+    }
+    catch (err) {
+        console.error("Error in adding hotel earning:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+});
+
+
 
 
 module.exports = {
     handleToCreateTransectionUser,
     handleToGetTransectionUserListByAdmin,
     handleToMakeTransectionBetweenAdminAndUser,
-    handleToAddTheHotelExpense
+    handleToAddTheHotelExpense,
+    handleToAddTheHotelEarning,
+    handleToGetEarningandExpenseReport
 };
