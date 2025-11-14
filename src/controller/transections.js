@@ -176,6 +176,43 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
     }
 });
 
+const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+
+        const query = req.query;
+        let matchQuery = {};
+
+       if(query.transectionUserId){
+        matchQuery.transectionUserId = query.transectionUserId;
+       } 
+
+        const transectionRecord = await TransectionUserRecord.findOne(matchQuery);
+        if (!transectionRecord) {
+            return res.status(404).json({
+                message: "Transection record not found for the given user ID"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Transection record fetched successfully",
+            data: transectionRecord
+        });
+
+    } catch (err) {
+        console .error("Error in fetching transection record:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+});
+
 
 // Api's for the for the hotel expense and Earning ----------------
 
@@ -304,5 +341,6 @@ module.exports = {
     handleToMakeTransectionBetweenAdminAndUser,
     handleToAddTheHotelExpense,
     handleToAddTheHotelEarning,
-    handleToGetEarningandExpenseReport
+    handleToGetEarningandExpenseReport,
+    handleToGetTransectionUserRecordByAdmin
 };

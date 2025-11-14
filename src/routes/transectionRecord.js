@@ -8,12 +8,14 @@ const {
     handleToMakeTransectionBetweenAdminAndUser,
     handleToAddTheHotelExpense,
     handleToAddTheHotelEarning,
-    handleToGetEarningandExpenseReport
+    handleToGetEarningandExpenseReport,
+    handleToGetTransectionUserRecordByAdmin
  } = require('../controller/transections');
 
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
 router.get("/get/transection-user", verifyToken, handleToGetTransectionUserListByAdmin);
 router.post("/make-transection", verifyToken, handleToMakeTransectionBetweenAdminAndUser);
+router.get("/get/transection-record", verifyToken, handleToGetTransectionUserRecordByAdmin);
 
 // routes for hotel expences and earning
 router.post('/add/hotel-expense',verifyToken,handleToAddTheHotelExpense)
