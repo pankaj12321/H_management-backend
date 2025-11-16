@@ -10,6 +10,10 @@ const TransectionUserRecord = require('../models/transectionRecord');
 const { Earning } = require('../models/expense_earning')
 const { Expense } = require('../models/expense_earning')
 
+const getISTTime = () => {
+    return new Date(Date.now() + (5.5 * 60 * 60 * 1000));  // UTC → IST
+};
+
 const handleToCreateTransectionUser = async (req, res, next) => {
     try {
         const decodedToken = req.user;
@@ -111,7 +115,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             });
         }
 
-        let transectionUserRecord = await TransactionalUser.findOne({
+        const transectionUserRecord = await TransactionalUser.findOne({
             transectionUserId: payload.transectionUserId
         });
 
@@ -120,53 +124,68 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                 message: "Transection User not found"
             });
         }
-        if (transectionUserRecord) {
-            let existingRecord = await TransectionUserRecord.findOne({
-                transectionUserId: payload.transectionUserId
-            });
 
-            if (existingRecord) {
-                if (payload.givenToAdmin) {
-                    existingRecord.givenToAdmin.push({
-                        Rs: payload.givenToAdmin.Rs
-                    });
-                    existingRecord.totalGiven += payload.givenToAdmin.Rs;
-                }
-                if (payload.takenFromAdmin) {
-                    existingRecord.takenFromAdmin.push({
-                        Rs: payload.takenFromAdmin.Rs
-                    });
-                    existingRecord.totalTaken += payload.takenFromAdmin.Rs;
-                }
-                await existingRecord.save();
-                return res.status(200).json({
-                    message: "Transaction updated successfully",
-                    data: existingRecord
+        let existingRecord = await TransectionUserRecord.findOne({
+            transectionUserId: payload.transectionUserId
+        });
+
+        if (existingRecord) {
+
+            if (payload.givenToAdmin) {
+                existingRecord.givenToAdmin.push({
+                    Rs: payload.givenToAdmin.Rs,
+                    paymentMode: payload.givenToAdmin.paymentMode, // ⭐ NEW FIELD
+                    updatedAt: getISTTime()
                 });
-            } else {
-                let transectionRecord = new TransectionUserRecord({
-                    transectionUserId: payload.transectionUserId,
-                })
-                if (payload.givenToAdmin) {
-                    transectionRecord.givenToAdmin.push({
-                        Rs: payload.givenToAdmin.Rs
-                    });
-                    transectionRecord.totalGiven += payload.givenToAdmin.Rs;
-                }
-                if (payload.takenFromAdmin) {
-                    transectionRecord.takenFromAdmin.push({
-                        Rs: payload.takenFromAdmin.Rs
-                    });
-                    transectionRecord.totalTaken += payload.takenFromAdmin.Rs;
-                }
-                await transectionRecord.save();
-                return res.status(200).json({
-                    message: "Transaction recorded successfully",
-                    data: transectionRecord
-                });
+                existingRecord.totalGiven += payload.givenToAdmin.Rs;
             }
 
+            if (payload.takenFromAdmin) {
+                existingRecord.takenFromAdmin.push({
+                    Rs: payload.takenFromAdmin.Rs,
+                    paymentMode: payload.takenFromAdmin.paymentMode, // ⭐ NEW FIELD
+                    updatedAt: getISTTime()
+                });
+                existingRecord.totalTaken += payload.takenFromAdmin.Rs;
+            }
+
+            await existingRecord.save();
+
+            return res.status(200).json({
+                message: "Transaction updated successfully",
+                data: existingRecord
+            });
         }
+
+        // ⭐ CREATE NEW RECORD
+        const transectionRecord = new TransectionUserRecord({
+            transectionUserId: payload.transectionUserId
+        });
+
+        if (payload.givenToAdmin) {
+            transectionRecord.givenToAdmin.push({
+                Rs: payload.givenToAdmin.Rs,
+                paymentMode: payload.givenToAdmin.paymentMode, // ⭐ NEW FIELD
+                updatedAt: getISTTime()
+            });
+            transectionRecord.totalGiven += payload.givenToAdmin.Rs;
+        }
+
+        if (payload.takenFromAdmin) {
+            transectionRecord.takenFromAdmin.push({
+                Rs: payload.takenFromAdmin.Rs,
+                paymentMode: payload.takenFromAdmin.paymentMode, // ⭐ NEW FIELD
+                updatedAt: getISTTime()
+            });
+            transectionRecord.totalTaken += payload.takenFromAdmin.Rs;
+        }
+
+        await transectionRecord.save();
+
+        return res.status(200).json({
+            message: "Transaction recorded successfully",
+            data: transectionRecord
+        });
 
     } catch (err) {
         console.error("Error in recording transaction:", err);
@@ -175,6 +194,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
         });
     }
 });
+
 
 const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) => {
     try {
@@ -189,9 +209,9 @@ const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) =>
         const query = req.query;
         let matchQuery = {};
 
-       if(query.transectionUserId){
-        matchQuery.transectionUserId = query.transectionUserId;
-       } 
+        if (query.transectionUserId) {
+            matchQuery.transectionUserId = query.transectionUserId;
+        }
 
         const transectionRecord = await TransectionUserRecord.findOne(matchQuery);
         if (!transectionRecord) {
@@ -206,7 +226,7 @@ const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) =>
         });
 
     } catch (err) {
-        console .error("Error in fetching transection record:", err);
+        console.error("Error in fetching transection record:", err);
         return res.status(500).json({
             message: "Internal Server Error"
         });
@@ -238,7 +258,8 @@ const handleToAddTheHotelExpense = asyncHandler(async (req, res) => {
             expenseAmount: payload.expenseAmount,
             expenceItems: payload.expenseItems,
             expenseDate: payload.expenseDate || new Date(),
-            paymentMode: payload.paymentMode || "cash"
+            paymentMode: payload.paymentMode || "cash",
+            dateTime: getISTTime()
         });
 
         await newExpense.save();
@@ -278,7 +299,8 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
             earningAmount: payload.earningAmount,
             earningDetails: payload.earningDetails,
             earningDate: payload.earningDate || new Date(),
-            paymentMode: payload.paymentMode || "cash"
+            paymentMode: payload.paymentMode || "cash",
+            dateTime: getISTTime()
         });
 
         await newEarning.save();
@@ -299,7 +321,7 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
 
 
 const handleToGetEarningandExpenseReport = asyncHandler(async (req, res) => {
-    try{
+    try {
         const decodedToken = req.user;
 
         if (!decodedToken || decodedToken.role !== 'admin') {

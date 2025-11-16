@@ -17,6 +17,10 @@ const expenseSchema = new mongoose.Schema({
     paymentMode: {
         type: String,
         default: "cash"
+    },
+    dateTime:{
+        type: Date,
+        default: new Date()
     }
 
 
@@ -37,11 +41,13 @@ const earningSchema = new mongoose.Schema({
     },
     earningDate: {
         type: Date,
-        default: new Date()
     },
     paymentMode: {
         type: String,
         default: "cash"
+    },
+     dateTime:{
+        type: Date,
     }
 })
 

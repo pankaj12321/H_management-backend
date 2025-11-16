@@ -1,37 +1,37 @@
 const mongoose = require("mongoose");
 
+const transactionItemSchema = new mongoose.Schema({
+    Rs: { type: Number },
+    paymentMode: { 
+        type: String, 
+        enum: ["cash", "online"], 
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now,
+    }
+});
+
 const TransectionUserRecordSchema = mongoose.Schema({
     transectionUserId: {
         type: String,
     },
+
     givenToAdmin: {
-        type: [
-            {
-                Rs: { type: Number },
-                updatedAt: {
-                    type: Date,
-                    default: Date.now,
-                },
-            },
-        ],
-        default: [], 
+        type: [transactionItemSchema],
+        default: [],
     },
+
     takenFromAdmin: {
-        type: [
-            {
-                Rs: { type: Number },
-                updatedAt: {
-                    type: Date,
-                    default: Date.now,
-                },
-            },
-        ],
-        default: [], 
+        type: [transactionItemSchema],
+        default: [],
     },
+
     totalTaken: {
         type: Number,
-        default: 0, 
+        default: 0,
     },
+
     totalGiven: {
         type: Number,
         default: 0,
@@ -39,5 +39,4 @@ const TransectionUserRecordSchema = mongoose.Schema({
 }, { timestamps: true });
 
 const TransectionUserRecord = mongoose.model('TransectionUserRecord', TransectionUserRecordSchema);
-
 module.exports = TransectionUserRecord;
