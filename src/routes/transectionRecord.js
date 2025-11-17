@@ -9,7 +9,9 @@ const {
     handleToAddTheHotelExpense,
     handleToAddTheHotelEarning,
     handleToGetEarningandExpenseReport,
-    handleToGetTransectionUserRecordByAdmin
+    handleToGetTransectionUserRecordByAdmin,
+    handleToAddTheHotelSupplierPerson,
+    handleToGetTheHotelSupplierPerson
  } = require('../controller/transections');
 
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
@@ -22,6 +24,13 @@ router.post('/add/hotel-expense',verifyToken,handleToAddTheHotelExpense)
 router.post('/add/hotel-earning',verifyToken,handleToAddTheHotelEarning)
 
 router.get('/get/earning-expense-report',verifyToken,handleToGetEarningandExpenseReport)
+
+// routes for the hotel supplier and their activity routes
+
+router.post('/add/supplier-person',verifyToken,handleToAddTheHotelSupplierPerson)
+router.get('/get/supplier-persons',verifyToken,handleToGetTheHotelSupplierPerson)
+
+
 
 const transectionRecordRouter = router
 module.exports = transectionRecordRouter;

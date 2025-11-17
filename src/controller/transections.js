@@ -9,6 +9,7 @@ const TransactionalUser = require('../models/transectional_user')
 const TransectionUserRecord = require('../models/transectionRecord');
 const { Earning } = require('../models/expense_earning')
 const { Expense } = require('../models/expense_earning')
+const Supplier = require('../models/supplier')
 
 const getISTTime = () => {
     return new Date(Date.now() + (5.5 * 60 * 60 * 1000));  // UTC → IST
@@ -109,7 +110,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             });
         }
 
-        if (!payload.givenToAdmin && !payload.takenFromAdmin) {
+        if (!payload.givenToAdmin && !payload.takenFromAdmin || payload.givenToAdmin) {
             return res.status(400).json({
                 message: "Either givenToAdmin or takenFromAdmin must be provided"
             });
@@ -354,6 +355,102 @@ const handleToGetEarningandExpenseReport = asyncHandler(async (req, res) => {
     }
 });
 
+const handleToAddTheHotelSupplierPerson = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+
+        const payload = req.body;
+
+        if (!payload.supplierName || !payload.supplierPhone || !payload.supplierCompany) {
+            return res.status(400).json({
+                message: "Invalid Payload: supplierName, supplierPhone & supplierCompany are required"
+            });
+        }
+
+        const existingSupplier = await Supplier.findOne({
+            supplierPhone: payload.supplierPhone
+        });
+
+        if (existingSupplier) {
+            return res.status(400).json({
+                message: "Supplier with this phone number already exists"
+            });
+        }
+
+        const newSupplier = new Supplier({
+            supplierId: entityIdGenerator("SUP"),
+            supplierName: payload.supplierName,
+            supplierEmail: payload.supplierEmail || '',
+            supplierPhone: payload.supplierPhone,
+            supplierCompany: payload.supplierCompany,
+            createdAt: getISTTime(),
+            updatedAt: getISTTime()
+        });
+
+        await newSupplier.save();
+
+        return res.status(201).json({
+            message: "Hotel Supplier Person added successfully",
+            data: newSupplier
+        });
+
+    } catch (err) {
+        console.error("Error in adding hotel supplier person:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+});
+
+const handleToGetTheHotelSupplierPerson = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+        const query = req.query;
+        let matchQuery = {};
+
+        if (query.supplierId) {
+            matchQuery.supplierId = query.supplierId;
+        }
+        if (query.supplierName) {
+            matchQuery.supplierName = { $regex: query.supplierName, $options: 'i' };
+        }
+        if (query.supplierPhone) {
+            matchQuery.supplierPhone = { $regex: query.supplierPhone, $options: 'i' };
+        }
+        if (query.supplierCompany) {
+            matchQuery.supplierCompany = { $regex: query.supplierCompany, $options: 'i' };
+        }
+
+        const suppliers = await Supplier.find(matchQuery).sort({ createdAt: -1 });
+        const supplierCount = suppliers.length;
+
+        return res.status(200).json({
+            message: "Hotel Supplier Persons fetched successfully",
+            data: suppliers,
+            count: supplierCount
+
+        });
+
+    } catch (err) {
+        console.error("Error in fetching hotel supplier persons:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+}); 
+
 
 
 
@@ -364,5 +461,7 @@ module.exports = {
     handleToAddTheHotelExpense,
     handleToAddTheHotelEarning,
     handleToGetEarningandExpenseReport,
-    handleToGetTransectionUserRecordByAdmin
+    handleToGetTransectionUserRecordByAdmin,
+    handleToAddTheHotelSupplierPerson,
+    handleToGetTheHotelSupplierPerson
 };
