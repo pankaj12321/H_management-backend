@@ -11,7 +11,9 @@ const {
     handleToGetEarningandExpenseReport,
     handleToGetTransectionUserRecordByAdmin,
     handleToAddTheHotelSupplierPerson,
-    handleToGetTheHotelSupplierPerson
+    handleToGetTheHotelSupplierPerson,
+    handleToAddSupplierTransaction,
+    handleToGetSupplierTransactionByOneByOne
  } = require('../controller/transections');
 
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
@@ -29,6 +31,10 @@ router.get('/get/earning-expense-report',verifyToken,handleToGetEarningandExpens
 
 router.post('/add/supplier-person',verifyToken,handleToAddTheHotelSupplierPerson)
 router.get('/get/supplier-persons',verifyToken,handleToGetTheHotelSupplierPerson)
+
+// add the hotel supplier transection activity
+router.post('/make-supplier-transection',verifyToken,handleToAddSupplierTransaction)
+router.get('/get/supplier-transection',verifyToken,handleToGetSupplierTransactionByOneByOne)
 
 
 

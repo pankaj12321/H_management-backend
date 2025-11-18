@@ -10,7 +10,7 @@ const TransectionUserRecord = require('../models/transectionRecord');
 const { Earning } = require('../models/expense_earning')
 const { Expense } = require('../models/expense_earning')
 const Supplier = require('../models/supplier')
-
+const SupplierTransactionRecord = require('../models/supplier-transection-record')
 const getISTTime = () => {
     return new Date(Date.now() + (5.5 * 60 * 60 * 1000));  // UTC → IST
 };
@@ -449,7 +449,145 @@ const handleToGetTheHotelSupplierPerson = asyncHandler(async (req, res) => {
             message: "Internal Server Error"
         });
     }
-}); 
+});
+
+const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== "admin") {
+            return res.status(403).json({
+                message: "Forbidden: Only admin can make supplier transactions"
+            });
+        }
+
+        const payload = req.body;
+
+        if (!payload.supplierId) {
+            return res.status(400).json({
+                message: "supplierId is required"
+            });
+        }
+
+        if (!payload.givenToAdmin && !payload.takenFromAdmin) {
+            return res.status(400).json({
+                message: "Either givenToAdmin or takenFromAdmin must be provided"
+            });
+        }
+
+        let existingRecord = await SupplierTransactionRecord.findOne({
+            supplierId: payload.supplierId
+        });
+
+        if (existingRecord) {
+
+            if (payload.givenToAdmin) {
+                existingRecord.givenToAdmin.push({
+                    Rs: payload.givenToAdmin.Rs,
+                    paymentMode: payload.givenToAdmin.paymentMode,
+                    updatedAt: getISTTime()
+                });
+
+                existingRecord.totalGiven += Number(payload.givenToAdmin.Rs);
+            }
+
+            if (payload.takenFromAdmin) {
+                existingRecord.takenFromAdmin.push({
+                    Rs: payload.takenFromAdmin.Rs,
+                    paymentMode: payload.takenFromAdmin.paymentMode,
+                    updatedAt: getISTTime()
+                });
+
+                existingRecord.totalTaken += Number(payload.takenFromAdmin.Rs);
+            }
+
+            await existingRecord.save();
+
+            return res.status(200).json({
+                message: "Supplier transaction updated successfully",
+                data: existingRecord
+            });
+        }
+
+        // -------------------------------------------------------------
+        // -------------------------------------------------------------
+        const newRecord = new SupplierTransactionRecord({
+            supplierId: payload.supplierId,
+        });
+
+        if (payload.givenToAdmin) {
+            newRecord.givenToAdmin.push({
+                Rs: payload.givenToAdmin.Rs,
+                paymentMode: payload.givenToAdmin.paymentMode,
+                updatedAt: getISTTime()
+            });
+
+            newRecord.totalGiven += Number(payload.givenToAdmin.Rs);
+        }
+
+        if (payload.takenFromAdmin) {
+            newRecord.takenFromAdmin.push({
+                Rs: payload.takenFromAdmin.Rs,
+                paymentMode: payload.takenFromAdmin.paymentMode,
+                updatedAt: getISTTime()
+            });
+
+            newRecord.totalTaken += Number(payload.takenFromAdmin.Rs);
+        }
+
+        await newRecord.save();
+
+        return res.status(200).json({
+            message: "Supplier transaction recorded successfully",
+            data: newRecord
+        });
+
+    } catch (error) {
+        console.error("Error in Supplier transaction API:", error);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+});
+
+const handleToGetSupplierTransactionByOneByOne = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== "admin") {
+            return res.status(403).json({
+                message: "Forbidden: Only admin can access supplier transactions"
+            });
+        }
+
+        const query = req.query;
+        const matchQuery = {};
+
+        if (query.supplierId) {
+            matchQuery.supplierId = query.supplierId;
+        }
+
+        const supplierTransaction = await SupplierTransactionRecord.findOne(matchQuery);
+
+        if (!supplierTransaction) {
+            return res.status(404).json({
+                message: "Supplier transaction record not found"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Supplier transaction record fetched successfully",
+            data: supplierTransaction
+        });
+
+    }
+    catch (error) {
+        console.error("Error in Supplier transaction API:", error);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+});
 
 
 
@@ -463,5 +601,7 @@ module.exports = {
     handleToGetEarningandExpenseReport,
     handleToGetTransectionUserRecordByAdmin,
     handleToAddTheHotelSupplierPerson,
-    handleToGetTheHotelSupplierPerson
+    handleToGetTheHotelSupplierPerson,
+    handleToAddSupplierTransaction,
+    handleToGetSupplierTransactionByOneByOne
 };
