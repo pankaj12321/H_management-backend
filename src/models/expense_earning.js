@@ -21,6 +21,9 @@ const expenseSchema = new mongoose.Schema({
     dateTime:{
         type: Date,
         default: new Date()
+    },
+      discription:{
+        type:String
     }
 
 
@@ -48,6 +51,9 @@ const earningSchema = new mongoose.Schema({
     },
      dateTime:{
         type: Date,
+    },
+    discription:{
+        type:String
     }
 })
 

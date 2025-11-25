@@ -2,9 +2,12 @@ const mongoose = require("mongoose");
 
 const supplierTxnItemSchema = new mongoose.Schema({
     Rs: { type: Number },
-    paymentMode: { 
-        type: String, 
-        enum: ["cash", "online"], 
+    paymentMode: {
+        type: String,
+        enum: ["cash", "online"],
+    },
+    discription: {
+        type: String
     },
     updatedAt: {
         type: Date,
@@ -13,7 +16,7 @@ const supplierTxnItemSchema = new mongoose.Schema({
 });
 
 const supplierTransactionRecordSchema = new mongoose.Schema({
-   supplierId: {
+    supplierId: {
         type: String,
     },
 

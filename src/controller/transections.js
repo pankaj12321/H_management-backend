@@ -135,7 +135,8 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             if (payload.givenToAdmin) {
                 existingRecord.givenToAdmin.push({
                     Rs: payload.givenToAdmin.Rs,
-                    paymentMode: payload.givenToAdmin.paymentMode, // ⭐ NEW FIELD
+                    discription: payload.givenToAdmin.discription, 
+                    paymentMode: payload.givenToAdmin.paymentMode, 
                     updatedAt: getISTTime()
                 });
                 existingRecord.totalGiven += payload.givenToAdmin.Rs;
@@ -144,7 +145,8 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             if (payload.takenFromAdmin) {
                 existingRecord.takenFromAdmin.push({
                     Rs: payload.takenFromAdmin.Rs,
-                    paymentMode: payload.takenFromAdmin.paymentMode, // ⭐ NEW FIELD
+                    discription: payload.takenFromAdmin.discription, 
+                    paymentMode: payload.takenFromAdmin.paymentMode, 
                     updatedAt: getISTTime()
                 });
                 existingRecord.totalTaken += payload.takenFromAdmin.Rs;
@@ -166,7 +168,8 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
         if (payload.givenToAdmin) {
             transectionRecord.givenToAdmin.push({
                 Rs: payload.givenToAdmin.Rs,
-                paymentMode: payload.givenToAdmin.paymentMode, // ⭐ NEW FIELD
+                discription: payload.givenToAdmin.discription, 
+                paymentMode: payload.givenToAdmin.paymentMode, 
                 updatedAt: getISTTime()
             });
             transectionRecord.totalGiven += payload.givenToAdmin.Rs;
@@ -175,7 +178,8 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
         if (payload.takenFromAdmin) {
             transectionRecord.takenFromAdmin.push({
                 Rs: payload.takenFromAdmin.Rs,
-                paymentMode: payload.takenFromAdmin.paymentMode, // ⭐ NEW FIELD
+                discription: payload.takenFromAdmin.discription,
+                paymentMode: payload.takenFromAdmin.paymentMode, 
                 updatedAt: getISTTime()
             });
             transectionRecord.totalTaken += payload.takenFromAdmin.Rs;
@@ -301,6 +305,7 @@ const handleToAddTheHotelExpense = asyncHandler(async (req, res) => {
             expenceItems: payload.expenseItems,
             expenseDate: payload.expenseDate || new Date(),
             paymentMode: payload.paymentMode || "cash",
+            discription: payload.discription || "",
             dateTime: getISTTime()
         });
 
@@ -342,6 +347,7 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
             earningDetails: payload.earningDetails,
             earningDate: payload.earningDate || new Date(),
             paymentMode: payload.paymentMode || "cash",
+            discription: payload.discription || "",
             dateTime: getISTTime()
         });
 
@@ -525,6 +531,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
             if (payload.givenToAdmin) {
                 existingRecord.givenToAdmin.push({
                     Rs: payload.givenToAdmin.Rs,
+                    discription: payload.givenToAdmin.discription,
                     paymentMode: payload.givenToAdmin.paymentMode,
                     updatedAt: getISTTime()
                 });
@@ -535,6 +542,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
             if (payload.takenFromAdmin) {
                 existingRecord.takenFromAdmin.push({
                     Rs: payload.takenFromAdmin.Rs,
+                    discription: payload.takenFromAdmin.discription,
                     paymentMode: payload.takenFromAdmin.paymentMode,
                     updatedAt: getISTTime()
                 });
@@ -559,6 +567,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
         if (payload.givenToAdmin) {
             newRecord.givenToAdmin.push({
                 Rs: payload.givenToAdmin.Rs,
+                discription: payload.givenToAdmin.discription,
                 paymentMode: payload.givenToAdmin.paymentMode,
                 updatedAt: getISTTime()
             });
@@ -569,6 +578,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
         if (payload.takenFromAdmin) {
             newRecord.takenFromAdmin.push({
                 Rs: payload.takenFromAdmin.Rs,
+                discription: payload.takenFromAdmin.discription,
                 paymentMode: payload.takenFromAdmin.paymentMode,
                 updatedAt: getISTTime()
             });

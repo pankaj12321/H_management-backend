@@ -6,6 +6,9 @@ const transactionItemSchema = new mongoose.Schema({
         type: String, 
         enum: ["cash", "online"], 
     },
+    discription:{
+        type: String 
+    },
     updatedAt: {
         type: Date,
         default: Date.now,
