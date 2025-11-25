@@ -15,7 +15,8 @@ const allowedOrigins = [
   'http://localhost:4200',
   'http://localhost:5174',
   'http://localhost:5000',
-   "https://blpoonmhotelandrestorent.netlify.app"
+   "https://blpoonmhotelandrestorent.netlify.app",
+   'http://35.247.198.237:5000/'
 ];
 
 app.use((req, res, next) => {
@@ -99,7 +100,7 @@ app.use((req, res) => {
 
 
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Server running on PORT: ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
