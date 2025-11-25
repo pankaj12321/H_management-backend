@@ -110,7 +110,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             });
         }
 
-        if (!payload.givenToAdmin && !payload.takenFromAdmin || payload.givenToAdmin) {
+        if (!payload.takenFromAdmin && !payload.givenToAdmin) {
             return res.status(400).json({
                 message: "Either givenToAdmin or takenFromAdmin must be provided"
             });
@@ -215,6 +215,13 @@ const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) =>
         }
 
         const transectionRecord = await TransectionUserRecord.findOne(matchQuery);
+        const countDocuments = await TransectionUserRecord.countDocuments(matchQuery);
+
+        if (countDocuments === 0) {
+            return res.status(404).json({
+                message: "No transection records found for the given criteria"
+            });
+        }
         if (!transectionRecord) {
             return res.status(404).json({
                 message: "Transection record not found for the given user ID"
@@ -223,7 +230,8 @@ const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) =>
 
         return res.status(200).json({
             message: "Transection record fetched successfully",
-            data: transectionRecord
+            data: transectionRecord,
+            count: countDocuments   
         });
 
     } catch (err) {
@@ -233,6 +241,39 @@ const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) =>
         });
     }
 });
+
+const handleToCalculateTotalTakenAndGivenMoney=async(req,res)=>{
+    try{
+        // const decodedToken= req.user;
+        // if(!decodedToken || decodedToken.role !=='admin'){
+        //     return res.status(403).json({
+        //         message:"Forbidden: invalid token/Unauthorized access"
+        //     });
+        // }
+        const transectionRecords= await TransectionUserRecord.find({});
+        let totalGiven=0;
+        let totalTaken=0;
+
+        transectionRecords.forEach(record=>{
+            totalGiven += record.totalGiven;
+            totalTaken += record.totalTaken;
+        })
+        return res.status(200).json({
+            message:"Total Given and Taken money calculated successfully",
+            data:{
+                totalGiven,
+                totalTaken
+            }
+        }); 
+
+    }
+    catch (err) {
+        console.error("Error in fetching transection record:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+}
 
 
 // Api's for the for the hotel expense and Earning ----------------
@@ -603,5 +644,6 @@ module.exports = {
     handleToAddTheHotelSupplierPerson,
     handleToGetTheHotelSupplierPerson,
     handleToAddSupplierTransaction,
-    handleToGetSupplierTransactionByOneByOne
+    handleToGetSupplierTransactionByOneByOne,
+    handleToCalculateTotalTakenAndGivenMoney
 };
