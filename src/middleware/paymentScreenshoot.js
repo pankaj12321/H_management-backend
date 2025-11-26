@@ -1,13 +1,17 @@
-// middlewares/uploadScreenshot.js
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
+
+// Ensure the folder exists
+const uploadDir = "uploads/paymentScreenshots";
+fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, "uploads/paymentScreenshots/"); 
+        cb(null, uploadDir); // save in uploads/paymentScreenshots
     },
     filename: function (req, file, cb) {
-        const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1E9);
+        const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
         cb(null, uniqueName + path.extname(file.originalname));
     }
 });
@@ -21,9 +25,5 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-const upload = multer({
-    storage,
-    fileFilter
-});
-
+const upload = multer({ storage, fileFilter });
 module.exports = upload;

@@ -86,7 +86,7 @@ app.get('/', (req, res) => {
   res.status(200).send('Welcome to the h_management API server!');
 });
 
-app.use("/uploads", express.static("uploads"));
+app.use('/uploads', express.static('uploads'));
 
 app.use((req, res) => {
   const notFoundMessage = `Route not found: ${req.method} ${req.originalUrl}`;

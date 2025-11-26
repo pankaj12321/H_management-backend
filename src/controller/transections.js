@@ -285,40 +285,35 @@ const handleToCalculateTotalTakenAndGivenMoney=async(req,res)=>{
 const handleToAddTheHotelExpense = asyncHandler(async (req, res) => {
     try {
         const decodedToken = req.user;
-
         if (!decodedToken || decodedToken.role !== 'admin') {
-            return res.status(403).json({
-                message: "Forbidden: invalid token/Unauthorized access"
-            });
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
         }
 
         const payload = req.body;
+
         if (!payload || !payload.expenseAmount || !payload.expenseItems) {
             return res.status(400).json({
                 message: "Invalid Payload: expenseAmount and expenseItems are required"
             });
         }
 
-        if(payload.paymentScreenshoot){
-            const screenshotUrl = payload.paymentScreenshoot;
-            req.protocol = req.headers['x-forwarded-proto'] || 'http';
-            req.get = function(header) {
-                if (header.toLowerCase() === 'host') {
-                    return req.headers['x-forwarded-host'] || req.headers['host'];
-                }
-                return null;
-            };
-            const fullUrl = `${req.protocol}://${req.get('host')}${screenshotUrl}`;
-            payload.paymentScreenshoot = fullUrl;
+        let screenshotUrl = null;
+        if (req.file) {
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+            const host = req.headers['x-forwarded-host'] || req.get('host');
+            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
         }
 
         const newExpense = new Expense({
             expenseId: entityIdGenerator("EX"),
             expenseAmount: payload.expenseAmount,
-            expenceItems: payload.expenseItems,
+            expenceItems: Array.isArray(payload.expenseItems)
+                ? payload.expenseItems
+                : [payload.expenseItems],
             expenseDate: payload.expenseDate || new Date(),
             paymentMode: payload.paymentMode || "cash",
             discription: payload.discription || "",
+            paymentScreenshoot: screenshotUrl,
             dateTime: getISTTime()
         });
 
@@ -331,11 +326,12 @@ const handleToAddTheHotelExpense = asyncHandler(async (req, res) => {
 
     } catch (err) {
         console.error("Error in adding hotel expense:", err);
-        return res.status(500).json({
-            message: "Internal Server Error"
-        });
+        return res.status(500).json({ message: "Internal Server Error" });
     }
 });
+
+
+
 
 const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
     try {
@@ -388,6 +384,8 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
         });
     }
 });
+
+
 
 
 const handleToGetEarningandExpenseReport = asyncHandler(async (req, res) => {

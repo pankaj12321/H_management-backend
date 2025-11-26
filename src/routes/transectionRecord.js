@@ -1,9 +1,9 @@
 const express = require("express");
 const { verifyToken } = require("../middleware/verifyToken");
-const router = express.Router(); 
-const upload = require("../middleware/paymentScreenshoot");  
+const router = express.Router();
+const upload = require("../middleware/paymentScreenshoot");
 
-const { 
+const {
     handleToCreateTransectionUser,
     handleToGetTransectionUserListByAdmin,
     handleToMakeTransectionBetweenAdminAndUser,
@@ -16,7 +16,7 @@ const {
     handleToAddSupplierTransaction,
     handleToGetSupplierTransactionByOneByOne,
     handleToCalculateTotalTakenAndGivenMoney
- } = require('../controller/transections');
+} = require('../controller/transections');
 
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
 router.get("/get/transection-user", verifyToken, handleToGetTransectionUserListByAdmin);
@@ -26,22 +26,26 @@ router.get("/get/transection-record", verifyToken, handleToGetTransectionUserRec
 // routes for hotel expences and earning
 router.post(
     "/add/hotel-expense",
-    upload.single("paymentScreenshot"),  verifyToken,
+    verifyToken,
+    upload.single("paymentScreenshoot"),
     handleToAddTheHotelExpense
-);router.post('/add/hotel-earning',verifyToken,handleToAddTheHotelEarning)
+);
+router.post('/add/hotel-earning', verifyToken,
+    upload.single("paymentScreenshoot"), 
+    handleToAddTheHotelEarning)
 
-router.get('/get/earning-expense-report',verifyToken,handleToGetEarningandExpenseReport)
+router.get('/get/earning-expense-report', verifyToken, handleToGetEarningandExpenseReport)
 
 // routes for the hotel supplier and their activity routes
 
-router.post('/add/supplier-person',verifyToken,handleToAddTheHotelSupplierPerson)
-router.get('/get/supplier-persons',verifyToken,handleToGetTheHotelSupplierPerson)
+router.post('/add/supplier-person', verifyToken, handleToAddTheHotelSupplierPerson)
+router.get('/get/supplier-persons', verifyToken, handleToGetTheHotelSupplierPerson)
 
 // add the hotel supplier transection activity
-router.post('/make-supplier-transection',verifyToken,handleToAddSupplierTransaction)
-router.get('/get/supplier-transection',verifyToken,handleToGetSupplierTransactionByOneByOne)
+router.post('/make-supplier-transection', verifyToken, handleToAddSupplierTransaction)
+router.get('/get/supplier-transection', verifyToken, handleToGetSupplierTransactionByOneByOne)
 
-router.get('/get/total-taken-amount',handleToCalculateTotalTakenAndGivenMoney)
+router.get('/get/total-taken-amount', handleToCalculateTotalTakenAndGivenMoney)
 
 
 
