@@ -10,6 +10,9 @@ const expenseSchema = new mongoose.Schema({
     expenceItems: {
         type: [String]
     },
+    paymentScreenshoot: {
+        type: String
+    },
     expenseDate: {
         type: Date,
         default: new Date()
@@ -18,12 +21,12 @@ const expenseSchema = new mongoose.Schema({
         type: String,
         default: "cash"
     },
-    dateTime:{
+    dateTime: {
         type: Date,
         default: new Date()
     },
-      discription:{
-        type:String
+    discription: {
+        type: String
     }
 
 
@@ -45,15 +48,18 @@ const earningSchema = new mongoose.Schema({
     earningDate: {
         type: Date,
     },
+    paymentScreenshoot: {
+        type: String
+    },
     paymentMode: {
         type: String,
         default: "cash"
     },
-     dateTime:{
+    dateTime: {
         type: Date,
     },
-    discription:{
-        type:String
+    discription: {
+        type: String
     }
 })
 

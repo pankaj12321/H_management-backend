@@ -15,8 +15,8 @@ const allowedOrigins = [
   'http://localhost:4200',
   'http://localhost:5174',
   'http://localhost:5000',
-   "https://blpoonmhotelandrestorent.netlify.app",
-   'http://35.247.198.237:5000/'
+  "https://blpoonmhotelandrestorent.netlify.app",
+  'http://35.247.198.237:5000/'
 ];
 
 app.use((req, res, next) => {
@@ -85,6 +85,8 @@ app.use('/api', apiRouter);
 app.get('/', (req, res) => {
   res.status(200).send('Welcome to the h_management API server!');
 });
+
+app.use("/uploads", express.static("uploads"));
 
 app.use((req, res) => {
   const notFoundMessage = `Route not found: ${req.method} ${req.originalUrl}`;

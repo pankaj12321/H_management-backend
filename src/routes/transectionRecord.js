@@ -1,6 +1,7 @@
 const express = require("express");
 const { verifyToken } = require("../middleware/verifyToken");
 const router = express.Router(); 
+const upload = require("../middleware/paymentScreenshoot");  
 
 const { 
     handleToCreateTransectionUser,
@@ -23,8 +24,11 @@ router.post("/make-transection", verifyToken, handleToMakeTransectionBetweenAdmi
 router.get("/get/transection-record", verifyToken, handleToGetTransectionUserRecordByAdmin);
 
 // routes for hotel expences and earning
-router.post('/add/hotel-expense',verifyToken,handleToAddTheHotelExpense)
-router.post('/add/hotel-earning',verifyToken,handleToAddTheHotelEarning)
+router.post(
+    "/add/hotel-expense",
+    upload.single("paymentScreenshot"),  verifyToken,
+    handleToAddTheHotelExpense
+);router.post('/add/hotel-earning',verifyToken,handleToAddTheHotelEarning)
 
 router.get('/get/earning-expense-report',verifyToken,handleToGetEarningandExpenseReport)
 

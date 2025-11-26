@@ -299,6 +299,19 @@ const handleToAddTheHotelExpense = asyncHandler(async (req, res) => {
             });
         }
 
+        if(payload.paymentScreenshoot){
+            const screenshotUrl = payload.paymentScreenshoot;
+            req.protocol = req.headers['x-forwarded-proto'] || 'http';
+            req.get = function(header) {
+                if (header.toLowerCase() === 'host') {
+                    return req.headers['x-forwarded-host'] || req.headers['host'];
+                }
+                return null;
+            };
+            const fullUrl = `${req.protocol}://${req.get('host')}${screenshotUrl}`;
+            payload.paymentScreenshoot = fullUrl;
+        }
+
         const newExpense = new Expense({
             expenseId: entityIdGenerator("EX"),
             expenseAmount: payload.expenseAmount,
@@ -341,6 +354,14 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
             });
         }
 
+         let screenshotUrl = null;
+        if (req.file) {
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+            const host = req.headers['x-forwarded-host'] || req.get('host');
+
+            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
+        }
+
         const newEarning = new Earning({
             eariningId: entityIdGenerator("ER"),
             earningAmount: payload.earningAmount,
@@ -348,6 +369,7 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
             earningDate: payload.earningDate || new Date(),
             paymentMode: payload.paymentMode || "cash",
             discription: payload.discription || "",
+            paymentScreenshoot: screenshotUrl,
             dateTime: getISTTime()
         });
 
