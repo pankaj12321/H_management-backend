@@ -116,6 +116,21 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             });
         }
 
+        if (payload.givenToAdmin && typeof payload.givenToAdmin === "string") {
+            payload.givenToAdmin = JSON.parse(payload.givenToAdmin);
+        }
+
+        if (payload.takenFromAdmin && typeof payload.takenFromAdmin === "string") {
+            payload.takenFromAdmin = JSON.parse(payload.takenFromAdmin);
+        }
+
+        let screenshotUrl = null;
+        if (req.file) {
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+            const host = req.headers['x-forwarded-host'] || req.get('host');
+            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
+        }
+
         const transectionUserRecord = await TransactionalUser.findOne({
             transectionUserId: payload.transectionUserId
         });
@@ -135,8 +150,9 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             if (payload.givenToAdmin) {
                 existingRecord.givenToAdmin.push({
                     Rs: payload.givenToAdmin.Rs,
-                    discription: payload.givenToAdmin.discription, 
-                    paymentMode: payload.givenToAdmin.paymentMode, 
+                    discription: payload.givenToAdmin.discription,
+                    paymentMode: payload.givenToAdmin.paymentMode,
+                    paymentScreenshoot: screenshotUrl,
                     updatedAt: getISTTime()
                 });
                 existingRecord.totalGiven += payload.givenToAdmin.Rs;
@@ -145,8 +161,9 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             if (payload.takenFromAdmin) {
                 existingRecord.takenFromAdmin.push({
                     Rs: payload.takenFromAdmin.Rs,
-                    discription: payload.takenFromAdmin.discription, 
-                    paymentMode: payload.takenFromAdmin.paymentMode, 
+                    discription: payload.takenFromAdmin.discription,
+                    paymentMode: payload.takenFromAdmin.paymentMode,
+                    paymentScreenshoot: screenshotUrl,
                     updatedAt: getISTTime()
                 });
                 existingRecord.totalTaken += payload.takenFromAdmin.Rs;
@@ -168,8 +185,9 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
         if (payload.givenToAdmin) {
             transectionRecord.givenToAdmin.push({
                 Rs: payload.givenToAdmin.Rs,
-                discription: payload.givenToAdmin.discription, 
-                paymentMode: payload.givenToAdmin.paymentMode, 
+                paymentScreenshoot: screenshotUrl,
+                discription: payload.givenToAdmin.discription,
+                paymentMode: payload.givenToAdmin.paymentMode,
                 updatedAt: getISTTime()
             });
             transectionRecord.totalGiven += payload.givenToAdmin.Rs;
@@ -179,7 +197,8 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             transectionRecord.takenFromAdmin.push({
                 Rs: payload.takenFromAdmin.Rs,
                 discription: payload.takenFromAdmin.discription,
-                paymentMode: payload.takenFromAdmin.paymentMode, 
+                paymentScreenshoot: screenshotUrl,
+                paymentMode: payload.takenFromAdmin.paymentMode,
                 updatedAt: getISTTime()
             });
             transectionRecord.totalTaken += payload.takenFromAdmin.Rs;
@@ -235,7 +254,7 @@ const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) =>
         return res.status(200).json({
             message: "Transection record fetched successfully",
             data: transectionRecord,
-            count: countDocuments   
+            count: countDocuments
         });
 
     } catch (err) {
@@ -246,29 +265,29 @@ const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) =>
     }
 });
 
-const handleToCalculateTotalTakenAndGivenMoney=async(req,res)=>{
-    try{
+const handleToCalculateTotalTakenAndGivenMoney = async (req, res) => {
+    try {
         // const decodedToken= req.user;
         // if(!decodedToken || decodedToken.role !=='admin'){
         //     return res.status(403).json({
         //         message:"Forbidden: invalid token/Unauthorized access"
         //     });
         // }
-        const transectionRecords= await TransectionUserRecord.find({});
-        let totalGiven=0;
-        let totalTaken=0;
+        const transectionRecords = await TransectionUserRecord.find({});
+        let totalGiven = 0;
+        let totalTaken = 0;
 
-        transectionRecords.forEach(record=>{
+        transectionRecords.forEach(record => {
             totalGiven += record.totalGiven;
             totalTaken += record.totalTaken;
         })
         return res.status(200).json({
-            message:"Total Given and Taken money calculated successfully",
-            data:{
+            message: "Total Given and Taken money calculated successfully",
+            data: {
                 totalGiven,
                 totalTaken
             }
-        }); 
+        });
 
     }
     catch (err) {
@@ -350,7 +369,7 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
             });
         }
 
-         let screenshotUrl = null;
+        let screenshotUrl = null;
         if (req.file) {
             const protocol = req.headers['x-forwarded-proto'] || req.protocol;
             const host = req.headers['x-forwarded-host'] || req.get('host');
@@ -530,6 +549,14 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
 
         const payload = req.body;
 
+        if (payload.givenToAdmin && typeof payload.givenToAdmin === "string") {
+            payload.givenToAdmin = JSON.parse(payload.givenToAdmin);
+        }
+
+        if (payload.takenFromAdmin && typeof payload.takenFromAdmin === "string") {
+            payload.takenFromAdmin = JSON.parse(payload.takenFromAdmin);
+        }
+
         if (!payload.supplierId) {
             return res.status(400).json({
                 message: "supplierId is required"
@@ -542,6 +569,13 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
             });
         }
 
+        let screenshotUrl = null;
+        if (req.file) {
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+            const host = req.headers['x-forwarded-host'] || req.get('host');
+            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
+        }
+
         let existingRecord = await SupplierTransactionRecord.findOne({
             supplierId: payload.supplierId
         });
@@ -551,6 +585,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
             if (payload.givenToAdmin) {
                 existingRecord.givenToAdmin.push({
                     Rs: payload.givenToAdmin.Rs,
+                    paymentScreenshoot: screenshotUrl,
                     discription: payload.givenToAdmin.discription,
                     paymentMode: payload.givenToAdmin.paymentMode,
                     updatedAt: getISTTime()
@@ -562,6 +597,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
             if (payload.takenFromAdmin) {
                 existingRecord.takenFromAdmin.push({
                     Rs: payload.takenFromAdmin.Rs,
+                    paymentScreenshoot: screenshotUrl,
                     discription: payload.takenFromAdmin.discription,
                     paymentMode: payload.takenFromAdmin.paymentMode,
                     updatedAt: getISTTime()
@@ -587,6 +623,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
         if (payload.givenToAdmin) {
             newRecord.givenToAdmin.push({
                 Rs: payload.givenToAdmin.Rs,
+                paymentScreenshoot: screenshotUrl,
                 discription: payload.givenToAdmin.discription,
                 paymentMode: payload.givenToAdmin.paymentMode,
                 updatedAt: getISTTime()
@@ -598,6 +635,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
         if (payload.takenFromAdmin) {
             newRecord.takenFromAdmin.push({
                 Rs: payload.takenFromAdmin.Rs,
+                paymentScreenshoot: screenshotUrl,
                 discription: payload.takenFromAdmin.discription,
                 paymentMode: payload.takenFromAdmin.paymentMode,
                 updatedAt: getISTTime()
@@ -614,9 +652,10 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error in Supplier transaction API:", error);
+        console.error("Error in Supplier transaction API:", error.message);
         return res.status(500).json({
-            message: "Internal server error"
+            message: "Internal server error",
+            error: error.message
         });
     }
 });

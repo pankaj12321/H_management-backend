@@ -20,7 +20,7 @@ const {
 
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
 router.get("/get/transection-user", verifyToken, handleToGetTransectionUserListByAdmin);
-router.post("/make-transection", verifyToken, handleToMakeTransectionBetweenAdminAndUser);
+router.post("/make-transection", verifyToken, upload.single("paymentScreenshoot"), handleToMakeTransectionBetweenAdminAndUser);
 router.get("/get/transection-record", verifyToken, handleToGetTransectionUserRecordByAdmin);
 
 // routes for hotel expences and earning
@@ -31,7 +31,7 @@ router.post(
     handleToAddTheHotelExpense
 );
 router.post('/add/hotel-earning', verifyToken,
-    upload.single("paymentScreenshoot"), 
+    upload.single("paymentScreenshoot"),
     handleToAddTheHotelEarning)
 
 router.get('/get/earning-expense-report', verifyToken, handleToGetEarningandExpenseReport)
@@ -42,7 +42,8 @@ router.post('/add/supplier-person', verifyToken, handleToAddTheHotelSupplierPers
 router.get('/get/supplier-persons', verifyToken, handleToGetTheHotelSupplierPerson)
 
 // add the hotel supplier transection activity
-router.post('/make-supplier-transection', verifyToken, handleToAddSupplierTransaction)
+router.post('/make-supplier-transection', verifyToken, upload.single("paymentScreenshoot"),
+    handleToAddSupplierTransaction)
 router.get('/get/supplier-transection', verifyToken, handleToGetSupplierTransactionByOneByOne)
 
 router.get('/get/total-taken-amount', handleToCalculateTotalTakenAndGivenMoney)

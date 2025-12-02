@@ -9,6 +9,9 @@ const supplierTxnItemSchema = new mongoose.Schema({
     discription: {
         type: String
     },
+    paymentScreenshoot: {
+        type: String   
+    },
     updatedAt: {
         type: Date,
         default: Date.now,

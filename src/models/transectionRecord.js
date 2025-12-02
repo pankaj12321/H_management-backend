@@ -2,12 +2,15 @@ const mongoose = require("mongoose");
 
 const transactionItemSchema = new mongoose.Schema({
     Rs: { type: Number },
-    paymentMode: { 
-        type: String, 
-        enum: ["cash", "online"], 
+    paymentMode: {
+        type: String,
+        enum: ["cash", "online"],
     },
-    discription:{
-        type: String 
+    discription: {
+        type: String
+    },
+    paymentScreenshoot: {
+        type: String   
     },
     updatedAt: {
         type: Date,
