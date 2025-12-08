@@ -115,7 +115,9 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
         mobile: payload.mobile,
         email: payload.email,
         srNumber: payload.srNumber,
+        location: payload.location,
         addedBy: decoded.user
+
       });
       await newDriver.save();
       res.status(201).json({ message: "Driver added successfully", driver: newDriver });

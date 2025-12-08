@@ -16,6 +16,9 @@ const driverSchema = new mongoose.Schema(
     mobile:{
         type:String,
     },
+    location:{
+        type:String,
+    },
     srNumber:{
         type:String,
         unique:true,

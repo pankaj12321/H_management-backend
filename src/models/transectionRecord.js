@@ -12,6 +12,9 @@ const transactionItemSchema = new mongoose.Schema({
     paymentScreenshoot: {
         type: String   
     },
+    billno:{
+        type:Number
+    },
     updatedAt: {
         type: Date,
         default: Date.now,

@@ -152,6 +152,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                     Rs: payload.givenToAdmin.Rs,
                     discription: payload.givenToAdmin.discription,
                     paymentMode: payload.givenToAdmin.paymentMode,
+                    billno: payload.givenToAdmin.billno || null,
                     paymentScreenshoot: screenshotUrl,
                     updatedAt: getISTTime()
                 });
@@ -162,6 +163,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                 existingRecord.takenFromAdmin.push({
                     Rs: payload.takenFromAdmin.Rs,
                     discription: payload.takenFromAdmin.discription,
+                    billno: payload.takenFromAdmin.billno || null,
                     paymentMode: payload.takenFromAdmin.paymentMode,
                     paymentScreenshoot: screenshotUrl,
                     updatedAt: getISTTime()
@@ -187,6 +189,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                 Rs: payload.givenToAdmin.Rs,
                 paymentScreenshoot: screenshotUrl,
                 discription: payload.givenToAdmin.discription,
+                billno: payload.givenToAdmin.billno || null,
                 paymentMode: payload.givenToAdmin.paymentMode,
                 updatedAt: getISTTime()
             });
@@ -197,6 +200,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             transectionRecord.takenFromAdmin.push({
                 Rs: payload.takenFromAdmin.Rs,
                 discription: payload.takenFromAdmin.discription,
+                billno: payload.takenFromAdmin.billno || null,
                 paymentScreenshoot: screenshotUrl,
                 paymentMode: payload.takenFromAdmin.paymentMode,
                 updatedAt: getISTTime()
@@ -333,6 +337,7 @@ const handleToAddTheHotelExpense = asyncHandler(async (req, res) => {
             paymentMode: payload.paymentMode || "cash",
             discription: payload.discription || "",
             paymentScreenshoot: screenshotUrl,
+            billno: payload.billno || null,
             dateTime: getISTTime()
         });
 
@@ -385,6 +390,7 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
             paymentMode: payload.paymentMode || "cash",
             discription: payload.discription || "",
             paymentScreenshoot: screenshotUrl,
+            billno: payload.billno || null,
             dateTime: getISTTime()
         });
 
@@ -587,6 +593,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                     Rs: payload.givenToAdmin.Rs,
                     paymentScreenshoot: screenshotUrl,
                     discription: payload.givenToAdmin.discription,
+                    billno: payload.givenToAdmin.billno || null,
                     paymentMode: payload.givenToAdmin.paymentMode,
                     updatedAt: getISTTime()
                 });
@@ -599,6 +606,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                     Rs: payload.takenFromAdmin.Rs,
                     paymentScreenshoot: screenshotUrl,
                     discription: payload.takenFromAdmin.discription,
+                    billno: payload.takenFromAdmin.billno || null,
                     paymentMode: payload.takenFromAdmin.paymentMode,
                     updatedAt: getISTTime()
                 });
@@ -625,6 +633,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                 Rs: payload.givenToAdmin.Rs,
                 paymentScreenshoot: screenshotUrl,
                 discription: payload.givenToAdmin.discription,
+                billno: payload.givenToAdmin.billno || null,
                 paymentMode: payload.givenToAdmin.paymentMode,
                 updatedAt: getISTTime()
             });
@@ -637,6 +646,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                 Rs: payload.takenFromAdmin.Rs,
                 paymentScreenshoot: screenshotUrl,
                 discription: payload.takenFromAdmin.discription,
+                billno: payload.takenFromAdmin.billno || null,
                 paymentMode: payload.takenFromAdmin.paymentMode,
                 updatedAt: getISTTime()
             });

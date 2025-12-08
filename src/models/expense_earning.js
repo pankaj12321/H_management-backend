@@ -21,6 +21,9 @@ const expenseSchema = new mongoose.Schema({
         type: String,
         default: "cash"
     },
+      billno:{
+        type:Number
+    },
     dateTime: {
         type: Date,
         default: new Date()
@@ -54,6 +57,9 @@ const earningSchema = new mongoose.Schema({
     paymentMode: {
         type: String,
         default: "cash"
+    },
+    billno:{
+        type:Number
     },
     dateTime: {
         type: Date,
