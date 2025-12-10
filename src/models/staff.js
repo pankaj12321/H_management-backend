@@ -26,6 +26,12 @@ const staffSchema = new mongoose.Schema({
     gender: {
         type: String,
     },
+    profileImage: {
+        type: String,
+    },
+    IdProofImage: {
+        type: String,
+    },
     adharNumber: {
         type: String
     },

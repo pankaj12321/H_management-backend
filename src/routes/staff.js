@@ -1,14 +1,25 @@
 const express = require("express");
 const { verifyToken } = require("../middleware/verifyToken");
-const router = express.Router(); 
+const upload = require("../middleware/paymentScreenshoot");
+
+const router = express.Router();
 
 const { handleToAddStaffUserByAdmin,
     handleToGetStaffListByAdmin,
     handleToUpdateStaffByAdmin,
     handleToDeleteTheStaffByAdmin
- } = require("../controller/staff");
+} = require("../controller/staff");
 
-router.post("/add", verifyToken, handleToAddStaffUserByAdmin);
+router.post(
+    "/add",
+    verifyToken,
+    upload.fields([
+        { name: "profileImage", maxCount: 1 },
+        { name: "IdProofImage", maxCount: 1 }
+    ]),
+    handleToAddStaffUserByAdmin
+);
+
 router.get("/get-list", verifyToken, handleToGetStaffListByAdmin);
 
 router.patch("/update-profile", verifyToken, handleToUpdateStaffByAdmin);

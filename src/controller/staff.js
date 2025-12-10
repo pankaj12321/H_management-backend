@@ -27,38 +27,62 @@ const handleToAddStaffUserByAdmin = asyncHandler(async (req, res) => {
         const existingStaffUser = await Staff.findOne({ adharNumber: payload.adharNumber, mobile: payload.mobile });
 
         if (existingStaffUser) {
-            return res.status(409).json({ message: "Conflict: Staff user with the same Adhar Number or Mobile already exists" });
-        }
-        if (!existingStaffUser) {
-
-            const staffId = entityIdGenerator("ST");
-            const newStaffAdded = new Staff({
-                firstName: payload.firstName,
-                lastName: payload.lastName,
-                email: payload.email || "",
-                mobile: payload.mobile,
-                age: payload.age || "",
-                role: payload.role,
-                address: {
-                    city: payload.address.city,
-                    state: payload.address.state || "",
-                    country: payload.address.country || ""
-                },
-                DOB: payload.DOB,
-                adharNumber: payload.adharNumber,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                staffId: staffId
+            return res.status(409).json({
+                message: "Conflict: Staff user already exists"
             });
-            await newStaffAdded.save();
-            return res.status(201).json({ message: "Staff user added successfully", newStaffAdded: newStaffAdded });
         }
-    }
-    catch (err) {
+
+
+        const hostUrl = `${req.protocol}://${req.get("host")}`;
+
+        let profileImageUrl = "";
+        let IdProofImageUrl = "";
+
+        if (req.files?.profileImage) {
+            const file = req.files.profileImage[0].filename;
+            profileImageUrl = `${hostUrl}/uploads/${file}`;
+        }
+
+        if (req.files?.IdProofImage) {
+            const file = req.files.IdProofImage[0].filename;
+            IdProofImageUrl = `${hostUrl}/uploads/${file}`;
+        }
+
+        const staffId = entityIdGenerator("ST");
+
+        const newStaff = new Staff({
+            firstName: payload.firstName,
+            lastName: payload.lastName,
+            email: payload.email || "",
+            mobile: payload.mobile,
+            age: payload.age || "",
+            role: payload.role,
+            address: {
+                city: payload.address.city,
+                state: payload.address.state || "",
+                country: payload.address.country || ""
+            },
+            DOB: payload.DOB,
+            adharNumber: payload.adharNumber,
+            profileImage: profileImageUrl,
+            IdProofImage: IdProofImageUrl,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            staffId
+        });
+
+        await newStaff.save();
+
+        return res.status(201).json({
+            message: "Staff user added successfully",
+            staff: newStaff
+        });
+
+    } catch (err) {
         console.error("Error in adding Staff:", err);
         res.status(500).json({ message: "Internal Server Error" });
     }
-})
+});
 
 const handleToGetStaffListByAdmin = asyncHandler(async (req, res) => {
     try {
