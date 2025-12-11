@@ -14,6 +14,8 @@ const SupplierTransactionRecord = require('../models/supplier-transection-record
 const getISTTime = () => {
     return new Date(Date.now() + (5.5 * 60 * 60 * 1000));  // UTC → IST
 };
+const {personalEar} = require('../models/expense_earning');
+const {personalExp} = require('../models/expense_earning')
 
 const handleToCreateTransectionUser = async (req, res, next) => {
     try {
@@ -150,6 +152,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             if (payload.givenToAdmin) {
                 existingRecord.givenToAdmin.push({
                     Rs: payload.givenToAdmin.Rs,
+                    returnDate: payload.givenToAdmin.returnDate,
                     discription: payload.givenToAdmin.discription,
                     paymentMode: payload.givenToAdmin.paymentMode,
                     billno: payload.givenToAdmin.billno || null,
@@ -162,6 +165,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             if (payload.takenFromAdmin) {
                 existingRecord.takenFromAdmin.push({
                     Rs: payload.takenFromAdmin.Rs,
+                    returnDate: payload.takenFromAdmin.returnDate,
                     discription: payload.takenFromAdmin.discription,
                     billno: payload.takenFromAdmin.billno || null,
                     paymentMode: payload.takenFromAdmin.paymentMode,
@@ -188,6 +192,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             transectionRecord.givenToAdmin.push({
                 Rs: payload.givenToAdmin.Rs,
                 paymentScreenshoot: screenshotUrl,
+                returnDate: payload.givenToAdmin.returnDate,
                 discription: payload.givenToAdmin.discription,
                 billno: payload.givenToAdmin.billno || null,
                 paymentMode: payload.givenToAdmin.paymentMode,
@@ -199,6 +204,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
         if (payload.takenFromAdmin) {
             transectionRecord.takenFromAdmin.push({
                 Rs: payload.takenFromAdmin.Rs,
+                returnDate: payload.takenFromAdmin.returnDate,
                 discription: payload.takenFromAdmin.discription,
                 billno: payload.takenFromAdmin.billno || null,
                 paymentScreenshoot: screenshotUrl,
@@ -592,7 +598,8 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                 existingRecord.givenToAdmin.push({
                     Rs: payload.givenToAdmin.Rs,
                     paymentScreenshoot: screenshotUrl,
-                    discription: payload.givenToAdmin.discription,
+                    returnDate: payload.givenToAdmin.returnDate,
+                    description: payload.givenToAdmin.description,
                     billno: payload.givenToAdmin.billno || null,
                     paymentMode: payload.givenToAdmin.paymentMode,
                     updatedAt: getISTTime()
@@ -604,8 +611,9 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
             if (payload.takenFromAdmin) {
                 existingRecord.takenFromAdmin.push({
                     Rs: payload.takenFromAdmin.Rs,
+                    returnDate: payload.takenFromAdmin.returnDate,
                     paymentScreenshoot: screenshotUrl,
-                    discription: payload.takenFromAdmin.discription,
+                    description: payload.takenFromAdmin.description,
                     billno: payload.takenFromAdmin.billno || null,
                     paymentMode: payload.takenFromAdmin.paymentMode,
                     updatedAt: getISTTime()
@@ -631,8 +639,9 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
         if (payload.givenToAdmin) {
             newRecord.givenToAdmin.push({
                 Rs: payload.givenToAdmin.Rs,
+                returnDate: payload.givenToAdmin.returnDate,
                 paymentScreenshoot: screenshotUrl,
-                discription: payload.givenToAdmin.discription,
+                description: payload.givenToAdmin.description,
                 billno: payload.givenToAdmin.billno || null,
                 paymentMode: payload.givenToAdmin.paymentMode,
                 updatedAt: getISTTime()
@@ -644,8 +653,9 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
         if (payload.takenFromAdmin) {
             newRecord.takenFromAdmin.push({
                 Rs: payload.takenFromAdmin.Rs,
+                returnDate: payload.takenFromAdmin.returnDate,
                 paymentScreenshoot: screenshotUrl,
-                discription: payload.takenFromAdmin.discription,
+                description: payload.takenFromAdmin.description,
                 billno: payload.takenFromAdmin.billno || null,
                 paymentMode: payload.takenFromAdmin.paymentMode,
                 updatedAt: getISTTime()
@@ -709,8 +719,145 @@ const handleToGetSupplierTransactionByOneByOne = asyncHandler(async (req, res) =
     }
 });
 
+const handleToAddThePersonalExpense = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+
+        const payload = req.body;
+
+        if (!payload || !payload.expenseAmount || !payload.expenseItems) {
+            return res.status(400).json({
+                message: "Invalid Payload: expenseAmount and expenseItems are required"
+            });
+        }
+
+        let screenshotUrl = null;
+        if (req.file) {
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+            const host = req.headers['x-forwarded-host'] || req.get('host');
+            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
+        }
+
+        const newExpense = new personalExp({
+            expenseId: entityIdGenerator("EX"),
+            expenseAmount: payload.expenseAmount,
+            expenceItems: Array.isArray(payload.expenseItems)
+                ? payload.expenseItems
+                : [payload.expenseItems],
+            expenseDate: payload.expenseDate || new Date(),
+            returnDate: payload.returnDate,
+            paymentMode: payload.paymentMode || "cash",
+            discription: payload.discription || "",
+            paymentScreenshoot: screenshotUrl,
+            billno: payload.billno || null,
+            dateTime: getISTTime()
+        });
+
+        await newExpense.save();
+
+        return res.status(201).json({
+            message: "Hotel Expense added successfully",
+            data: newExpense
+        });
+
+    } catch (err) {
+        console.error("Error in adding hotel expense:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+});
 
 
+const handleToAddThePersonalEarning = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+
+        const payload = req.body;
+        if (!payload || !payload.earningAmount || !payload.earningDetails) {
+            return res.status(400).json({
+                message: "Invalid Payload: earningAmount and earningDetails are required"
+            });
+        }
+
+        let screenshotUrl = null;
+        if (req.file) {
+            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+            const host = req.headers['x-forwarded-host'] || req.get('host');
+
+            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
+        }
+
+        const newEarning = new personalEar({
+            eariningId: entityIdGenerator("ER"),
+            earningAmount: payload.earningAmount,
+            earningDetails: payload.earningDetails,
+            earningDate: payload.earningDate || new Date(),
+            returnDate: payload.returnDate,
+            paymentMode: payload.paymentMode || "cash",
+            discription: payload.discription || "",
+            paymentScreenshoot: screenshotUrl,
+            billno: payload.billno || null,
+            dateTime: getISTTime()
+        });
+
+        await newEarning.save();
+
+        return res.status(201).json({
+            message: "Hotel Earning added successfully",
+            data: newEarning
+        });
+
+    }
+    catch (err) {
+        console.error("Error in adding hotel earning:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+});
+
+
+const handleToGetPersonalEarningandExpenseReport = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+        const earnings = await personalEar.find({});
+        const expenses = await personalExp.find({});
+
+        const totalMonthlyEarnings = earnings.reduce((total, earning) => total + earning.earningAmount, 0);
+        const totalMonthlyExpenses = expenses.reduce((total, expense) => total + expense.expenseAmount, 0);
+
+        return res.status(200).json({
+            message: "Earning and Expense Report fetched successfully",
+            data: {
+                earnings,
+                expenses,
+                totalMonthlyEarnings,
+                totalMonthlyExpenses
+            }
+        });
+
+    }
+    catch (err) {
+        console.error("Error in adding hotel earning:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+});
 
 module.exports = {
     handleToCreateTransectionUser,
@@ -724,5 +871,8 @@ module.exports = {
     handleToGetTheHotelSupplierPerson,
     handleToAddSupplierTransaction,
     handleToGetSupplierTransactionByOneByOne,
-    handleToCalculateTotalTakenAndGivenMoney
+    handleToCalculateTotalTakenAndGivenMoney,
+    handleToAddThePersonalEarning,
+    handleToAddThePersonalExpense,
+    handleToGetPersonalEarningandExpenseReport
 };

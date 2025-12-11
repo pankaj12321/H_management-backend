@@ -15,7 +15,10 @@ const {
     handleToGetTheHotelSupplierPerson,
     handleToAddSupplierTransaction,
     handleToGetSupplierTransactionByOneByOne,
-    handleToCalculateTotalTakenAndGivenMoney
+    handleToCalculateTotalTakenAndGivenMoney,
+    handleToAddThePersonalExpense,
+    handleToAddThePersonalEarning,
+    handleToGetPersonalEarningandExpenseReport
 } = require('../controller/transections');
 
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
@@ -48,6 +51,18 @@ router.get('/get/supplier-transection', verifyToken, handleToGetSupplierTransact
 
 router.get('/get/total-taken-amount', handleToCalculateTotalTakenAndGivenMoney)
 
+
+router.post(
+    "/add/personal-expense",
+    verifyToken,
+    upload.single("paymentScreenshoot"),
+    handleToAddThePersonalExpense
+);
+router.post('/add/personal-earning', verifyToken,
+    upload.single("paymentScreenshoot"),
+    handleToAddThePersonalEarning)
+
+router.get('/get/personal-earning-expense-report', verifyToken, handleToGetPersonalEarningandExpenseReport)
 
 
 const transectionRecordRouter = router

@@ -80,14 +80,13 @@ const handleToMarkAttendanceOfStaff = async (req, res, next) => {
 
     return res.status(201).json({
       message: "Attendance marked successfully.",
-      data: attendanceData,
+      data: attendanceData.toObject(),   
     });
   } catch (err) {
     console.error("Error in marking staff attendance:", err);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
 
 
 const handleToGetAttendanceOfStaff = async (req, res) => {
@@ -119,40 +118,50 @@ const handleToGetAttendanceOfStaff = async (req, res) => {
       );
 
       const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+
+      // FIX → attendance object instead of string
       const dayWise = {};
       for (let i = 1; i <= daysInMonth; i++) {
-        dayWise[i] = "—"; // default no record
+        dayWise[i] = {
+          attendance: "—",
+          time: "—"
+        };
       }
 
       staffAttendance.forEach((att) => {
         const day = att.attendanceDetails.date;
-        const status = att.attendanceDetails.attendance;
-        if (dayWise[day] !== undefined) {
-          dayWise[day] = status;
-        }
+
+        dayWise[day] = {
+          attendance: att.attendanceDetails.attendance || "—",
+          time: att.attendanceDetails.time || "—"
+        };
       });
 
+      // Count totals
       const counts = {
         Present: 0,
         Absent: 0,
         HalfDay: 0,
+        PaidLeave: 0,
       };
 
-      Object.values(dayWise).forEach((val) => {
-        if (val === "Present") counts.Present++;
-        else if (val === "Absent") counts.Absent++;
-        else if (val === "Half Day" || val === "HalfDay") counts.HalfDay++;
+      Object.values(dayWise).forEach((entry) => {
+        if (entry.attendance === "Present") counts.Present++;
+        if (entry.attendance === "Absent") counts.Absent++;
+        if (entry.attendance === "Half Day") counts.HalfDay++;
+        if (entry.attendance === "Paid Leave") counts.PaidLeave++;
       });
 
       return {
         staffName: `${staff.firstName} ${staff.lastName}`,
         staffId: staff.staffId,
         mobile: staff.mobile,
-        attendance: dayWise,
+        attendance: dayWise,  // FIXED
         totalCount: counts,
       };
     });
 
+    // Pagination
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const startIndex = (page - 1) * limit;
@@ -168,11 +177,15 @@ const handleToGetAttendanceOfStaff = async (req, res) => {
       totalPages: Math.ceil(responseData.length / limit),
       data: paginatedData,
     });
+
   } catch (err) {
     console.error("Error fetching attendance data:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
+
 
 const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
   try {

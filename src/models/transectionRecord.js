@@ -15,6 +15,9 @@ const transactionItemSchema = new mongoose.Schema({
     billno:{
         type:Number
     },
+    returnDate:{
+        type:Date
+    },
     updatedAt: {
         type: Date,
         default: Date.now,

@@ -6,7 +6,10 @@ const supplierTxnItemSchema = new mongoose.Schema({
         type: String,
         enum: ["cash", "online"],
     },
-    discription: {
+    returnDate:{
+        type:Date
+    },
+    description: {
         type: String
     },
     paymentScreenshoot: {
