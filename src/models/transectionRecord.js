@@ -6,7 +6,7 @@ const transactionItemSchema = new mongoose.Schema({
         type: String,
         enum: ["cash", "online"],
     },
-    discription: {
+    description: {
         type: String
     },
     paymentScreenshoot: {

@@ -153,7 +153,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                 existingRecord.givenToAdmin.push({
                     Rs: payload.givenToAdmin.Rs,
                     returnDate: payload.givenToAdmin.returnDate,
-                    discription: payload.givenToAdmin.discription,
+                    description: payload.givenToAdmin.description,
                     paymentMode: payload.givenToAdmin.paymentMode,
                     billno: payload.givenToAdmin.billno || null,
                     paymentScreenshoot: screenshotUrl,
@@ -166,7 +166,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                 existingRecord.takenFromAdmin.push({
                     Rs: payload.takenFromAdmin.Rs,
                     returnDate: payload.takenFromAdmin.returnDate,
-                    discription: payload.takenFromAdmin.discription,
+                    description: payload.takenFromAdmin.description,
                     billno: payload.takenFromAdmin.billno || null,
                     paymentMode: payload.takenFromAdmin.paymentMode,
                     paymentScreenshoot: screenshotUrl,
@@ -193,7 +193,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                 Rs: payload.givenToAdmin.Rs,
                 paymentScreenshoot: screenshotUrl,
                 returnDate: payload.givenToAdmin.returnDate,
-                discription: payload.givenToAdmin.discription,
+                description: payload.givenToAdmin.description,
                 billno: payload.givenToAdmin.billno || null,
                 paymentMode: payload.givenToAdmin.paymentMode,
                 updatedAt: getISTTime()
@@ -205,7 +205,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             transectionRecord.takenFromAdmin.push({
                 Rs: payload.takenFromAdmin.Rs,
                 returnDate: payload.takenFromAdmin.returnDate,
-                discription: payload.takenFromAdmin.discription,
+                description: payload.takenFromAdmin.description,
                 billno: payload.takenFromAdmin.billno || null,
                 paymentScreenshoot: screenshotUrl,
                 paymentMode: payload.takenFromAdmin.paymentMode,
@@ -341,7 +341,7 @@ const handleToAddTheHotelExpense = asyncHandler(async (req, res) => {
                 : [payload.expenseItems],
             expenseDate: payload.expenseDate || new Date(),
             paymentMode: payload.paymentMode || "cash",
-            discription: payload.discription || "",
+            description: payload.description || "",
             paymentScreenshoot: screenshotUrl,
             billno: payload.billno || null,
             dateTime: getISTTime()
@@ -394,7 +394,7 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
             earningDetails: payload.earningDetails,
             earningDate: payload.earningDate || new Date(),
             paymentMode: payload.paymentMode || "cash",
-            discription: payload.discription || "",
+            description: payload.description || "",
             paymentScreenshoot: screenshotUrl,
             billno: payload.billno || null,
             dateTime: getISTTime()
@@ -750,7 +750,7 @@ const handleToAddThePersonalExpense = asyncHandler(async (req, res) => {
             expenseDate: payload.expenseDate || new Date(),
             returnDate: payload.returnDate,
             paymentMode: payload.paymentMode || "cash",
-            discription: payload.discription || "",
+            description: payload.description || "",
             paymentScreenshoot: screenshotUrl,
             billno: payload.billno || null,
             dateTime: getISTTime()
@@ -802,7 +802,7 @@ const handleToAddThePersonalEarning = asyncHandler(async (req, res) => {
             earningDate: payload.earningDate || new Date(),
             returnDate: payload.returnDate,
             paymentMode: payload.paymentMode || "cash",
-            discription: payload.discription || "",
+            description: payload.description || "",
             paymentScreenshoot: screenshotUrl,
             billno: payload.billno || null,
             dateTime: getISTTime()

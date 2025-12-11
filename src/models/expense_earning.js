@@ -28,7 +28,7 @@ const expenseSchema = new mongoose.Schema({
         type: Date,
         default: new Date()
     },
-    discription: {
+    description: {
         type: String
     }
 
@@ -64,7 +64,7 @@ const earningSchema = new mongoose.Schema({
     dateTime: {
         type: Date,
     },
-    discription: {
+    description: {
         type: String
     }
 }, { timestamp: true })
@@ -103,7 +103,7 @@ const PersonalExpenseSchema = new mongoose.Schema({
         type: Date,
         default: new Date()
     },
-    discription: {
+    description: {
         type: String
     }
 
@@ -142,7 +142,7 @@ const personalEarningSchema = new mongoose.Schema({
     dateTime: {
         type: Date,
     },
-    discription: {
+    description: {
         type: String
     }
 })
