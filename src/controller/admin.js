@@ -9,6 +9,8 @@ const { deleteToken } = require("../middleware/verifyToken");
 const { entityIdGenerator } = require("../utils/entityGenerator")
 const redisClient = require("../config/redis");
 const DriverCommisionEntry = require("../models/driverCommisionEntry");
+const sendWhatsAppMessage = require('../services/whatsapp');
+
 
 const hotelStaffCredentials = [
   {
@@ -244,10 +246,20 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
+
     await newEntry.save();
+
+    const messageContent = `Hello, your driver commission entry has been created. Details: 
+    - Driver ID: ${payload.driverId}
+    - Commission Amount: ${payload.driverCommisionAmount || 0}
+    - Party Amount: ${payload.partyAmount || 0}
+    - Status: ${payload.status || "pending"}
+    - Entry Date: ${new Date(payload.entryDate || Date.now()).toLocaleString()}`;
+
+await sendWhatsAppMessage("+918690858238", messageContent);
+
     res.status(201).json({ message: "Driver commission entry added successfully", entry: newEntry });
-  }
-  catch (err) {
+  } catch (err) {
     console.error("Error in adding the entry of driver commission:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }

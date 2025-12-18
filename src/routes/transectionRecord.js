@@ -18,7 +18,8 @@ const {
     handleToCalculateTotalTakenAndGivenMoney,
     handleToAddThePersonalExpense,
     handleToAddThePersonalEarning,
-    handleToGetPersonalEarningandExpenseReport
+    handleToGetPersonalEarningandExpenseReport,
+    handleToAddTheSubjectOfHotelEarning
 } = require('../controller/transections');
 
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
@@ -61,6 +62,8 @@ router.post(
 router.post('/add/personal-earning', verifyToken,
     upload.single("paymentScreenshoot"),
     handleToAddThePersonalEarning)
+
+router.post('/add/earExp/subject',verifyToken,handleToAddTheSubjectOfHotelEarning)    
 
 router.get('/get/personal-earning-expense-report', verifyToken, handleToGetPersonalEarningandExpenseReport)
 

@@ -14,8 +14,9 @@ const SupplierTransactionRecord = require('../models/supplier-transection-record
 const getISTTime = () => {
     return new Date(Date.now() + (5.5 * 60 * 60 * 1000));  // UTC → IST
 };
-const {personalEar} = require('../models/expense_earning');
-const {personalExp} = require('../models/expense_earning')
+const { personalEar } = require('../models/expense_earning');
+const { personalExp } = require('../models/expense_earning')
+const { expEarSubject } = require('../models/personal_ear_exp_Subject')
 
 const handleToCreateTransectionUser = async (req, res, next) => {
     try {
@@ -719,6 +720,61 @@ const handleToGetSupplierTransactionByOneByOne = asyncHandler(async (req, res) =
     }
 });
 
+const handleToAddTheSubjectOfHotelEarning = async (req, res) => {
+    try {
+
+        const decodedToken = req.user;
+        if (!decodedToken || decodedToken.role != "admin") {
+            return res.status(403).
+                json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+
+        const payload = req.body;
+        if (!payload.name || !payload.mobile) {
+            return res.status(404).json({
+                message: "invalid payload body"
+            });
+        }
+        const existingEar_Exp_Subject = await expEarSubject.findOne({
+            name: payload.name,
+            mobile: payload.mobile
+        });
+
+        if (existingEar_Exp_Subject) {
+            return res.status(409).json({
+                message: "this subject of earning and expense already exists"
+            });
+        }
+
+
+        const earExpSubjectId = entityIdGenerator('EarExpSub')
+        const newEar_Exp_Subject = new expEarSubject({
+            name: payload.name,
+            email: payload.email || "",
+            mobile:payload.mobile,
+            status: "Active",
+            earExpSubjectId: earExpSubjectId,
+            createdAt: new Date(),
+        })
+
+        const data=await  newEar_Exp_Subject.save();
+        return res.status(200).json({
+            message: "new earning expense subject added successfully",
+            data: data
+        })
+
+    }
+    catch (error) {
+        console.error("Error in Supplier transaction API:", error);
+        return res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+}
+
+
+
+
 const handleToAddThePersonalExpense = asyncHandler(async (req, res) => {
     try {
         const decodedToken = req.user;
@@ -874,5 +930,6 @@ module.exports = {
     handleToCalculateTotalTakenAndGivenMoney,
     handleToAddThePersonalEarning,
     handleToAddThePersonalExpense,
-    handleToGetPersonalEarningandExpenseReport
+    handleToGetPersonalEarningandExpenseReport,
+    handleToAddTheSubjectOfHotelEarning
 };
