@@ -71,86 +71,9 @@ const earningSchema = new mongoose.Schema({
 
 const Earning = mongoose.model('earning', earningSchema)
 
-const PersonalExpenseSchema = new mongoose.Schema({
-    expenseId: {
-        type: String,
-    },
-    expenseAmount: {
-        type: Number,
-        required: true,
-    },
-    expenceItems: {
-        type: [String]
-    },
-    paymentScreenshoot: {
-        type: String
-    },
-    expenseDate: {
-        type: Date,
-        default: new Date()
-    },
-    returnDate: {
-        type: Date
-    },
-    paymentMode: {
-        type: String,
-        default: "cash"
-    },
-    billno: {
-        type: Number
-    },
-    dateTime: {
-        type: Date,
-        default: new Date()
-    },
-    description: {
-        type: String
-    }
-
-
-}, { timestamp: true })
-
-const personalExp = mongoose.model('PersonalExpense', PersonalExpenseSchema)
-
-const personalEarningSchema = new mongoose.Schema({
-       eariningId: {
-        type: String,
-    },
-    earningAmount: {
-        type: Number,
-        required: true,
-    },
-    earningDetails: {
-        type: [String]
-    },
-    earningDate: {
-        type: Date,
-    },
-    returnDate:{
-        type:Date
-    },
-    paymentScreenshoot: {
-        type: String
-    },
-    paymentMode: {
-        type: String,
-        default: "cash"
-    },
-    billno: {
-        type: Number
-    },
-    dateTime: {
-        type: Date,
-    },
-    description: {
-        type: String
-    }
-})
-const personalEar = mongoose.model('personalEarning',personalEarningSchema)
 
 module.exports = {
     Expense,
     Earning,
-    personalExp,
-    personalEar
+
 };

@@ -16,10 +16,10 @@ const {
     handleToAddSupplierTransaction,
     handleToGetSupplierTransactionByOneByOne,
     handleToCalculateTotalTakenAndGivenMoney,
-    handleToAddThePersonalExpense,
-    handleToAddThePersonalEarning,
-    handleToGetPersonalEarningandExpenseReport,
-    handleToAddTheSubjectOfHotelEarning
+    handleToAddPersonalTransectionalUser,
+    handleToGetPersonalUserByAdmin,
+    handleToMakeTransectionBetweenAdminAndPersonalUser,
+    handleToGetPersonalTransectionUserRecordByAdmin
 } = require('../controller/transections');
 
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
@@ -53,19 +53,14 @@ router.get('/get/supplier-transection', verifyToken, handleToGetSupplierTransact
 router.get('/get/total-taken-amount', handleToCalculateTotalTakenAndGivenMoney)
 
 
-router.post(
-    "/add/personal-expense",
-    verifyToken,
-    upload.single("paymentScreenshoot"),
-    handleToAddThePersonalExpense
-);
-router.post('/add/personal-earning', verifyToken,
-    upload.single("paymentScreenshoot"),
-    handleToAddThePersonalEarning)
 
-router.post('/add/earExp/subject',verifyToken,handleToAddTheSubjectOfHotelEarning)    
 
-router.get('/get/personal-earning-expense-report', verifyToken, handleToGetPersonalEarningandExpenseReport)
+router.post('/add/personal/transectionalUser', verifyToken, handleToAddPersonalTransectionalUser)
+router.get('/get/personal/transectional/user', verifyToken, handleToGetPersonalUserByAdmin)
+router.post('/make/personal/user/transection', verifyToken, upload.single("paymentScreenshoot"),
+    handleToMakeTransectionBetweenAdminAndPersonalUser)
+router.get('/get/personal/transectional/record',verifyToken,handleToGetPersonalTransectionUserRecordByAdmin)    
+
 
 
 const transectionRecordRouter = router

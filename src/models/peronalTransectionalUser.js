@@ -1,6 +1,6 @@
 const { default: mongoose } = require("mongoose");
 
-const personal_ear_exp_SubjectSchema = new mongoose.Schema({
+const personalTransectionalSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -21,7 +21,7 @@ const personal_ear_exp_SubjectSchema = new mongoose.Schema({
             type: String,
         }
     },
-    earExpSubjectId: {
+    personalTransectionalUserId: {
         type: String
     },
     status: {
@@ -38,7 +38,7 @@ const personal_ear_exp_SubjectSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-const expEarSubject = new mongoose.model('earExpSubject', personal_ear_exp_SubjectSchema)
+const personalTransectionalUser = new mongoose.model('personalTransection_user', personalTransectionalSchema)
 module.exports={
-    expEarSubject
+    personalTransectionalUser
 }

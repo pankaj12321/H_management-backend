@@ -14,9 +14,9 @@ const SupplierTransactionRecord = require('../models/supplier-transection-record
 const getISTTime = () => {
     return new Date(Date.now() + (5.5 * 60 * 60 * 1000));  // UTC → IST
 };
-const { personalEar } = require('../models/expense_earning');
-const { personalExp } = require('../models/expense_earning')
-const { expEarSubject } = require('../models/personal_ear_exp_Subject')
+
+const { personalTransectionalUser } = require('../models/peronalTransectionalUser')
+const  personalTransectionUserRecord = require('../models/personalTransectionalRecord')
 
 const handleToCreateTransectionUser = async (req, res, next) => {
     try {
@@ -720,9 +720,8 @@ const handleToGetSupplierTransactionByOneByOne = asyncHandler(async (req, res) =
     }
 });
 
-const handleToAddTheSubjectOfHotelEarning = async (req, res) => {
+const handleToAddPersonalTransectionalUser = async (req, res) => {
     try {
-
         const decodedToken = req.user;
         if (!decodedToken || decodedToken.role != "admin") {
             return res.status(403).
@@ -735,32 +734,32 @@ const handleToAddTheSubjectOfHotelEarning = async (req, res) => {
                 message: "invalid payload body"
             });
         }
-        const existingEar_Exp_Subject = await expEarSubject.findOne({
+        const existingPeronalUser = await personalTransectionalUser.findOne({
             name: payload.name,
             mobile: payload.mobile
         });
 
-        if (existingEar_Exp_Subject) {
+        if (existingPeronalUser) {
             return res.status(409).json({
-                message: "this subject of earning and expense already exists"
+                message: "this personal user already exists"
             });
         }
 
 
-        const earExpSubjectId = entityIdGenerator('EarExpSub')
-        const newEar_Exp_Subject = new expEarSubject({
+        const personalTransectionalUserId = entityIdGenerator('personalTR')
+        const newPersonalTransectionalUser = new personalTransectionalUser({
             name: payload.name,
             email: payload.email || "",
-            mobile:payload.mobile,
+            mobile: payload.mobile,
             status: "Active",
-            earExpSubjectId: earExpSubjectId,
+            personalTransectionalUserId: personalTransectionalUserId,
             createdAt: new Date(),
         })
 
-        const data=await  newEar_Exp_Subject.save();
+        const data = await newPersonalTransectionalUser.save();
         return res.status(200).json({
-            message: "new earning expense subject added successfully",
-            data: data
+            message: "new personal transectional user added successfully",
+            data: newPersonalTransectionalUser
         })
 
     }
@@ -772,116 +771,143 @@ const handleToAddTheSubjectOfHotelEarning = async (req, res) => {
     }
 }
 
-
-
-
-const handleToAddThePersonalExpense = asyncHandler(async (req, res) => {
+const handleToGetPersonalUserByAdmin = asyncHandler(async (req, res) => {
     try {
         const decodedToken = req.user;
         if (!decodedToken || decodedToken.role !== 'admin') {
             return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
         }
-
-        const payload = req.body;
-
-        if (!payload || !payload.expenseAmount || !payload.expenseItems) {
-            return res.status(400).json({
-                message: "Invalid Payload: expenseAmount and expenseItems are required"
-            });
+        const queryParams = req.query;
+        const matchQuery = {};
+        if (queryParams.status) {
+            matchQuery.status = queryParams.status;
+        }
+        if (queryParams.name) {
+            matchQuery.name = { $regex: queryParams.name, $options: 'i' };
+        }
+        if (queryParams.mobile) {
+            matchQuery.mobile = { $regex: queryParams.mobile, $options: 'i' };
+        }
+        if (queryParams.email) {
+            matchQuery.email = { $regex: queryParams.email, $options: 'i' };
+        }
+        if (queryParams.transectionUserId) {
+            matchQuery.transectionUserId = queryParams.transectionUserId;
         }
 
-        let screenshotUrl = null;
-        if (req.file) {
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-            const host = req.headers['x-forwarded-host'] || req.get('host');
-            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
-        }
+        const transectionUsers = await personalTransectionalUser.find(matchQuery).sort({ createdAt: -1 });
 
-        const newExpense = new personalExp({
-            expenseId: entityIdGenerator("EX"),
-            expenseAmount: payload.expenseAmount,
-            expenceItems: Array.isArray(payload.expenseItems)
-                ? payload.expenseItems
-                : [payload.expenseItems],
-            expenseDate: payload.expenseDate || new Date(),
-            returnDate: payload.returnDate,
-            paymentMode: payload.paymentMode || "cash",
-            description: payload.description || "",
-            paymentScreenshoot: screenshotUrl,
-            billno: payload.billno || null,
-            dateTime: getISTTime()
-        });
-
-        await newExpense.save();
-
-        return res.status(201).json({
-            message: "Hotel Expense added successfully",
-            data: newExpense
-        });
-
+        return res.status(200).json({ message: "Transection Users fetched successfully", data: transectionUsers });
     } catch (err) {
-        console.error("Error in adding hotel expense:", err);
-        return res.status(500).json({ message: "Internal Server Error" });
+        console.error("Error in fetching Transection Users:", err);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 });
 
 
-const handleToAddThePersonalEarning = asyncHandler(async (req, res) => {
+const handleToMakeTransectionBetweenAdminAndPersonalUser =asyncHandler(async (req, res) => {
     try {
         const decodedToken = req.user;
 
-        if (!decodedToken || decodedToken.role !== 'admin') {
+        if (!decodedToken || decodedToken.role !== "admin") {
             return res.status(403).json({
                 message: "Forbidden: invalid token/Unauthorized access"
             });
         }
 
         const payload = req.body;
-        if (!payload || !payload.earningAmount || !payload.earningDetails) {
+
+        if (!payload.personalTransectionalUserId) {
             return res.status(400).json({
-                message: "Invalid Payload: earningAmount and earningDetails are required"
+                message: "Invalid Payload: personalTransectionalUserId is required"
             });
+        }
+
+        if (!payload.givenToAdmin && !payload.takenFromAdmin) {
+            return res.status(400).json({
+                message: "Either givenToAdmin or takenFromAdmin must be provided"
+            });
+        }
+
+        if (payload.givenToAdmin && typeof payload.givenToAdmin === "string") {
+            payload.givenToAdmin = JSON.parse(payload.givenToAdmin);
+        }
+
+        if (payload.takenFromAdmin && typeof payload.takenFromAdmin === "string") {
+            payload.takenFromAdmin = JSON.parse(payload.takenFromAdmin);
         }
 
         let screenshotUrl = null;
         if (req.file) {
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-            const host = req.headers['x-forwarded-host'] || req.get('host');
-
+            const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+            const host = req.headers["x-forwarded-host"] || req.get("host");
             screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
         }
 
-        const newEarning = new personalEar({
-            eariningId: entityIdGenerator("ER"),
-            earningAmount: payload.earningAmount,
-            earningDetails: payload.earningDetails,
-            earningDate: payload.earningDate || new Date(),
-            returnDate: payload.returnDate,
-            paymentMode: payload.paymentMode || "cash",
-            description: payload.description || "",
-            paymentScreenshoot: screenshotUrl,
-            billno: payload.billno || null,
-            dateTime: getISTTime()
+        const userExists = await personalTransectionalUser.findOne({
+            personalTransectionalUserId: payload.personalTransectionalUserId
         });
 
-        await newEarning.save();
+        if (!userExists) {
+            return res.status(404).json({
+                message: "Transection User not found"
+            });
+        }
 
-        return res.status(201).json({
-            message: "Hotel Earning added successfully",
-            data: newEarning
+        let existingRecord = await personalTransectionUserRecord.findOne({
+            personalTransectionalUserId: payload.personalTransectionalUserId
         });
 
-    }
-    catch (err) {
-        console.error("Error in adding hotel earning:", err);
+        if (!existingRecord) {
+            existingRecord = new personalTransectionUserRecord({
+                personalTransectionalUserId: payload.personalTransectionalUserId
+            });
+        }
+
+        if (payload.givenToAdmin) {
+            existingRecord.givenToAdmin.push({
+                Rs: payload.givenToAdmin.Rs,
+                paymentMode: payload.givenToAdmin.paymentMode,
+                description: payload.givenToAdmin.description,
+                billno: payload.givenToAdmin.billno || null,
+                returnDate: payload.givenToAdmin.returnDate,
+                paymentScreenshoot: screenshotUrl,
+                updatedAt: getISTTime()
+            });
+            existingRecord.totalGiven += payload.givenToAdmin.Rs;
+        }
+
+        if (payload.takenFromAdmin) {
+            existingRecord.takenFromAdmin.push({
+                Rs: payload.takenFromAdmin.Rs,
+                paymentMode: payload.takenFromAdmin.paymentMode,
+                description: payload.takenFromAdmin.description,
+                billno: payload.takenFromAdmin.billno || null,
+                returnDate: payload.takenFromAdmin.returnDate,
+                paymentScreenshoot: screenshotUrl,
+                updatedAt: getISTTime()
+            });
+            existingRecord.totalTaken += payload.takenFromAdmin.Rs;
+        }
+
+        await existingRecord.save();
+
+        return res.status(200).json({
+            message: existingRecord.isNew
+                ? "Transaction recorded successfully"
+                : "Transaction updated successfully",
+            data: existingRecord
+        });
+
+    } catch (err) {
+        console.error("Error in recording transaction:", err);
         return res.status(500).json({
             message: "Internal Server Error"
         });
     }
 });
 
-
-const handleToGetPersonalEarningandExpenseReport = asyncHandler(async (req, res) => {
+const handleToGetPersonalTransectionUserRecordByAdmin = asyncHandler(async (req, res) => {
     try {
         const decodedToken = req.user;
 
@@ -890,25 +916,36 @@ const handleToGetPersonalEarningandExpenseReport = asyncHandler(async (req, res)
                 message: "Forbidden: invalid token/Unauthorized access"
             });
         }
-        const earnings = await personalEar.find({});
-        const expenses = await personalExp.find({});
 
-        const totalMonthlyEarnings = earnings.reduce((total, earning) => total + earning.earningAmount, 0);
-        const totalMonthlyExpenses = expenses.reduce((total, expense) => total + expense.expenseAmount, 0);
+        const query = req.query;
+        let matchQuery = {};
+
+        if (query.personalTransectionalUserId) {
+            matchQuery.transectionUserId = query.transectionUserId;
+        }
+
+        const transectionRecord = await personalTransectionUserRecord.findOne(matchQuery);
+        const countDocuments = await personalTransectionUserRecord.countDocuments(matchQuery);
+
+        if (countDocuments === 0) {
+            return res.status(404).json({
+                message: "No transection records found for the given criteria"
+            });
+        }
+        if (!transectionRecord) {
+            return res.status(404).json({
+                message: "Transection record not found for the given user ID"
+            });
+        }
 
         return res.status(200).json({
-            message: "Earning and Expense Report fetched successfully",
-            data: {
-                earnings,
-                expenses,
-                totalMonthlyEarnings,
-                totalMonthlyExpenses
-            }
+            message: "Transection record fetched successfully",
+            data: transectionRecord,
+            count: countDocuments
         });
 
-    }
-    catch (err) {
-        console.error("Error in adding hotel earning:", err);
+    } catch (err) {
+        console.error("Error in fetching transection record:", err);
         return res.status(500).json({
             message: "Internal Server Error"
         });
@@ -928,8 +965,9 @@ module.exports = {
     handleToAddSupplierTransaction,
     handleToGetSupplierTransactionByOneByOne,
     handleToCalculateTotalTakenAndGivenMoney,
-    handleToAddThePersonalEarning,
-    handleToAddThePersonalExpense,
-    handleToGetPersonalEarningandExpenseReport,
-    handleToAddTheSubjectOfHotelEarning
+
+    handleToAddPersonalTransectionalUser,
+    handleToGetPersonalUserByAdmin,
+    handleToMakeTransectionBetweenAdminAndPersonalUser,
+    handleToGetPersonalTransectionUserRecordByAdmin
 };
