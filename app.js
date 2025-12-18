@@ -102,7 +102,7 @@ app.use((req, res) => {
 
 
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0/0', () => {
   console.log(`✅ Server running on PORT: ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
