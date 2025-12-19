@@ -10,13 +10,16 @@ const transactionItemSchema = new mongoose.Schema({
         type: String
     },
     paymentScreenshoot: {
-        type: String   
+        type: String
     },
-    billno:{
-        type:Number
+    billno: {
+        type: Number
     },
-    returnDate:{
-        type:Date
+    returnDate: {
+        type: Date
+    },
+    hotelBranchName: {
+        type: String,
     },
     updatedAt: {
         type: Date,

@@ -113,9 +113,12 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             });
         }
 
-        if (!payload.takenFromAdmin && !payload.givenToAdmin) {
+        if (
+            (payload.givenToAdmin && !payload.givenToAdmin.hotelBranchName) ||
+            (payload.takenFromAdmin && !payload.takenFromAdmin.hotelBranchName)
+        ) {
             return res.status(400).json({
-                message: "Either givenToAdmin or takenFromAdmin must be provided"
+                message: "hotelBranchName is required for each transaction"
             });
         }
 
@@ -157,6 +160,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                     description: payload.givenToAdmin.description,
                     paymentMode: payload.givenToAdmin.paymentMode,
                     billno: payload.givenToAdmin.billno || null,
+                    hotelBranchName: payload.givenToAdmin.hotelBranchName,
                     paymentScreenshoot: screenshotUrl,
                     updatedAt: getISTTime()
                 });
@@ -169,6 +173,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                     returnDate: payload.takenFromAdmin.returnDate,
                     description: payload.takenFromAdmin.description,
                     billno: payload.takenFromAdmin.billno || null,
+                    hotelBranchName: payload.takenFromAdmin.hotelBranchName,
                     paymentMode: payload.takenFromAdmin.paymentMode,
                     paymentScreenshoot: screenshotUrl,
                     updatedAt: getISTTime()
@@ -196,6 +201,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                 returnDate: payload.givenToAdmin.returnDate,
                 description: payload.givenToAdmin.description,
                 billno: payload.givenToAdmin.billno || null,
+                hotelBranchName: payload.givenToAdmin.hotelBranchName,
                 paymentMode: payload.givenToAdmin.paymentMode,
                 updatedAt: getISTTime()
             });
@@ -208,6 +214,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
                 returnDate: payload.takenFromAdmin.returnDate,
                 description: payload.takenFromAdmin.description,
                 billno: payload.takenFromAdmin.billno || null,
+                hotelBranchName: payload.takenFromAdmin.hotelBranchName,
                 paymentScreenshoot: screenshotUrl,
                 paymentMode: payload.takenFromAdmin.paymentMode,
                 updatedAt: getISTTime()
@@ -247,8 +254,31 @@ const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) =>
         if (query.transectionUserId) {
             matchQuery.transectionUserId = query.transectionUserId;
         }
+        const pipeline = [];
 
-        const transectionRecord = await TransectionUserRecord.findOne(matchQuery);
+        pipeline.push({ $match: matchQuery });
+
+        if (query.hotelBranchName) {
+            pipeline.push({
+                $addFields: {
+                    givenToAdmin: {
+                        $filter: {
+                            input: "$givenToAdmin",
+                            as: "item",
+                            cond: { $eq: ["$$item.hotelBranchName", query.hotelBranchName] }
+                        }
+                    },
+                    takenFromAdmin: {
+                        $filter: {
+                            input: "$takenFromAdmin",
+                            as: "item",
+                            cond: { $eq: ["$$item.hotelBranchName", query.hotelBranchName] }
+                        }
+                    }
+                }
+            });
+        }
+        const transectionRecord = await TransectionUserRecord.find(matchQuery);
         const countDocuments = await TransectionUserRecord.countDocuments(matchQuery);
 
         if (countDocuments === 0) {
@@ -425,46 +455,46 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
 
 
 const handleToGetEarningandExpenseReport = asyncHandler(async (req, res) => {
-  try {
-    if (!req.user || req.user.role !== "admin") {
-      return res.status(403).json({ message: "Unauthorized" });
+    try {
+        if (!req.user || req.user.role !== "admin") {
+            return res.status(403).json({ message: "Unauthorized" });
+        }
+
+        const { hotelBranchName } = req.query;
+
+        if (!hotelBranchName) {
+            return res.status(400).json({
+                message: "hotelBranchName is required"
+            });
+        }
+
+        const earnings = await Earning.find({ hotelBranchName });
+        const expenses = await Expense.find({ hotelBranchName });
+
+        const totalEarning = earnings.reduce(
+            (sum, e) => sum + Number(e.earningAmount), 0
+        );
+
+        const totalExpense = expenses.reduce(
+            (sum, e) => sum + Number(e.expenseAmount), 0
+        );
+
+        res.status(200).json({
+            message: "Branch-wise report fetched successfully",
+            data: {
+                hotelBranchName,
+                totalEarning,
+                totalExpense,
+                profitOrLoss: totalEarning - totalExpense,
+                earnings,
+                expenses
+            }
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Internal Server Error" });
     }
-
-    const { hotelBranchName } = req.query;
-
-    if (!hotelBranchName) {
-      return res.status(400).json({
-        message: "hotelBranchName is required"
-      });
-    }
-
-    const earnings = await Earning.find({ hotelBranchName });
-    const expenses = await Expense.find({ hotelBranchName });
-
-    const totalEarning = earnings.reduce(
-      (sum, e) => sum + Number(e.earningAmount), 0
-    );
-
-    const totalExpense = expenses.reduce(
-      (sum, e) => sum + Number(e.expenseAmount), 0
-    );
-
-    res.status(200).json({
-      message: "Branch-wise report fetched successfully",
-      data: {
-        hotelBranchName,
-        totalEarning,
-        totalExpense,
-        profitOrLoss: totalEarning - totalExpense,
-        earnings,
-        expenses
-      }
-    });
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
 });
 
 

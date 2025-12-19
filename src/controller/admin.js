@@ -74,8 +74,7 @@ const handleToLoginByAdmin = asyncHandler(async (req, res) => {
         branch: findAdminInDB.HBranchName,
         role: "admin",
       },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      process.env.JWT_SECRET
     );
 
     res.status(200).json({
