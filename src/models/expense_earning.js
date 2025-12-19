@@ -3,6 +3,11 @@ const expenseSchema = new mongoose.Schema({
     expenseId: {
         type: String,
     },
+    hotelBranchName: {
+        type: String,
+        required: true,
+        index: true
+    },
     expenseAmount: {
         type: Number,
         required: true,
@@ -40,6 +45,11 @@ const Expense = mongoose.model('Expense', expenseSchema);
 const earningSchema = new mongoose.Schema({
     eariningId: {
         type: String,
+    },
+    hotelBranchName: {
+        type: String,
+        required: true, 
+        index: true
     },
     earningAmount: {
         type: Number,

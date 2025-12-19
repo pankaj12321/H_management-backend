@@ -16,7 +16,7 @@ const getISTTime = () => {
 };
 
 const { personalTransectionalUser } = require('../models/peronalTransectionalUser')
-const  personalTransectionUserRecord = require('../models/personalTransectionalRecord')
+const personalTransectionUserRecord = require('../models/personalTransectionalRecord')
 
 const handleToCreateTransectionUser = async (req, res, next) => {
     try {
@@ -321,7 +321,7 @@ const handleToAddTheHotelExpense = asyncHandler(async (req, res) => {
 
         const payload = req.body;
 
-        if (!payload || !payload.expenseAmount || !payload.expenseItems) {
+        if (!payload || !payload.expenseAmount || !payload.expenseItems || !payload.hotelBranchName) {
             return res.status(400).json({
                 message: "Invalid Payload: expenseAmount and expenseItems are required"
             });
@@ -336,6 +336,7 @@ const handleToAddTheHotelExpense = asyncHandler(async (req, res) => {
 
         const newExpense = new Expense({
             expenseId: entityIdGenerator("EX"),
+            hotelBranchName: payload.hotelBranchName,
             expenseAmount: payload.expenseAmount,
             expenceItems: Array.isArray(payload.expenseItems)
                 ? payload.expenseItems
@@ -375,7 +376,7 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
         }
 
         const payload = req.body;
-        if (!payload || !payload.earningAmount || !payload.earningDetails) {
+        if (!payload || !payload.earningAmount || !payload.earningDetails || !payload.hotelBranchName) {
             return res.status(400).json({
                 message: "Invalid Payload: earningAmount and earningDetails are required"
             });
@@ -391,8 +392,11 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
 
         const newEarning = new Earning({
             eariningId: entityIdGenerator("ER"),
+            hotelBranchName: payload.hotelBranchName,
             earningAmount: payload.earningAmount,
-            earningDetails: payload.earningDetails,
+            earningDetails: Array.isArray(payload.earningDetails)
+                ? payload.earningDetails
+                : [payload.earningDetails],
             earningDate: payload.earningDate || new Date(),
             paymentMode: payload.paymentMode || "cash",
             description: payload.description || "",
@@ -421,38 +425,48 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
 
 
 const handleToGetEarningandExpenseReport = asyncHandler(async (req, res) => {
-    try {
-        const decodedToken = req.user;
-
-        if (!decodedToken || decodedToken.role !== 'admin') {
-            return res.status(403).json({
-                message: "Forbidden: invalid token/Unauthorized access"
-            });
-        }
-        const earnings = await Earning.find({});
-        const expenses = await Expense.find({});
-
-        const totalMonthlyEarnings = earnings.reduce((total, earning) => total + earning.earningAmount, 0);
-        const totalMonthlyExpenses = expenses.reduce((total, expense) => total + expense.expenseAmount, 0);
-
-        return res.status(200).json({
-            message: "Earning and Expense Report fetched successfully",
-            data: {
-                earnings,
-                expenses,
-                totalMonthlyEarnings,
-                totalMonthlyExpenses
-            }
-        });
-
+  try {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized" });
     }
-    catch (err) {
-        console.error("Error in adding hotel earning:", err);
-        return res.status(500).json({
-            message: "Internal Server Error"
-        });
+
+    const { hotelBranchName } = req.query;
+
+    if (!hotelBranchName) {
+      return res.status(400).json({
+        message: "hotelBranchName is required"
+      });
     }
+
+    const earnings = await Earning.find({ hotelBranchName });
+    const expenses = await Expense.find({ hotelBranchName });
+
+    const totalEarning = earnings.reduce(
+      (sum, e) => sum + Number(e.earningAmount), 0
+    );
+
+    const totalExpense = expenses.reduce(
+      (sum, e) => sum + Number(e.expenseAmount), 0
+    );
+
+    res.status(200).json({
+      message: "Branch-wise report fetched successfully",
+      data: {
+        hotelBranchName,
+        totalEarning,
+        totalExpense,
+        profitOrLoss: totalEarning - totalExpense,
+        earnings,
+        expenses
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 });
+
 
 const handleToAddTheHotelSupplierPerson = asyncHandler(async (req, res) => {
     try {
@@ -806,175 +820,175 @@ const handleToGetPersonalUserByAdmin = asyncHandler(async (req, res) => {
 
 
 const handleToMakeTransectionBetweenAdminAndPersonalUser = asyncHandler(async (req, res) => {
-  try {
-    const decodedToken = req.user;
+    try {
+        const decodedToken = req.user;
 
-    if (!decodedToken || decodedToken.role !== "admin") {
-      return res.status(403).json({
-        message: "Forbidden: invalid token/Unauthorized access"
-      });
+        if (!decodedToken || decodedToken.role !== "admin") {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+
+        const payload = req.body;
+
+        if (!payload.personalTransectionalUserId) {
+            return res.status(400).json({
+                message: "Invalid Payload: personalTransectionalUserId is required"
+            });
+        }
+
+        if (!payload.givenToAdmin && !payload.takenFromAdmin) {
+            return res.status(400).json({
+                message: "Either givenToAdmin or takenFromAdmin must be provided"
+            });
+        }
+
+        if (payload.givenToAdmin && typeof payload.givenToAdmin === "string") {
+            payload.givenToAdmin = JSON.parse(payload.givenToAdmin);
+        }
+
+        if (payload.takenFromAdmin && typeof payload.takenFromAdmin === "string") {
+            payload.takenFromAdmin = JSON.parse(payload.takenFromAdmin);
+        }
+
+        let screenshotUrl = null;
+        if (req.file) {
+            const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+            const host = req.headers["x-forwarded-host"] || req.get("host");
+            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
+        }
+
+        const userExists = await personalTransectionalUser.findOne({
+            personalTransectionalUserId: payload.personalTransectionalUserId
+        });
+
+        if (!userExists) {
+            return res.status(404).json({
+                message: "Transaction User not found"
+            });
+        }
+
+        let record = await personalTransectionUserRecord.findOne({
+            personalTransectionalUserId: payload.personalTransectionalUserId
+        });
+
+        if (!record) {
+            record = new personalTransectionUserRecord({
+                personalTransectionalUserId: payload.personalTransectionalUserId,
+            });
+        }
+
+        // ✅ GIVEN TO ADMIN
+        if (payload.givenToAdmin) {
+            const amount = Number(payload.givenToAdmin.Rs);
+
+            if (isNaN(amount)) {
+                return res.status(400).json({ message: "Invalid amount in givenToAdmin" });
+            }
+
+            record.givenToAdmin.push({
+                Rs: amount,
+                paymentMode: payload.givenToAdmin.paymentMode,
+                description: payload.givenToAdmin.description,
+                paymentScreenshoot: screenshotUrl,
+                billno: payload.givenToAdmin.billno,
+                returnDate: payload.givenToAdmin.returnDate,
+                updatedAt: new Date()
+            });
+        }
+
+        // ✅ TAKEN FROM ADMIN
+        if (payload.takenFromAdmin) {
+            const amount = Number(payload.takenFromAdmin.Rs);
+
+            if (isNaN(amount)) {
+                return res.status(400).json({ message: "Invalid amount in takenFromAdmin" });
+            }
+
+            record.takenFromAdmin.push({
+                Rs: amount,
+                paymentMode: payload.takenFromAdmin.paymentMode,
+                description: payload.takenFromAdmin.description,
+                paymentScreenshoot: screenshotUrl,
+                billno: payload.takenFromAdmin.billno,
+                returnDate: payload.takenFromAdmin.returnDate,
+                updatedAt: new Date()
+            });
+        }
+
+        // ✅ RECOMPUTE TOTALS (MOST IMPORTANT)
+        record.totalGiven = record.givenToAdmin.reduce(
+            (sum, item) => sum + Number(item.Rs),
+            0
+        );
+
+        record.totalTaken = record.takenFromAdmin.reduce(
+            (sum, item) => sum + Number(item.Rs),
+            0
+        );
+
+        await record.save();
+
+        return res.status(200).json({
+            message: "Transaction recorded successfully",
+            data: record
+        });
+
+    } catch (err) {
+        console.error("Error in recording transaction:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
     }
-
-    const payload = req.body;
-
-    if (!payload.personalTransectionalUserId) {
-      return res.status(400).json({
-        message: "Invalid Payload: personalTransectionalUserId is required"
-      });
-    }
-
-    if (!payload.givenToAdmin && !payload.takenFromAdmin) {
-      return res.status(400).json({
-        message: "Either givenToAdmin or takenFromAdmin must be provided"
-      });
-    }
-
-    if (payload.givenToAdmin && typeof payload.givenToAdmin === "string") {
-      payload.givenToAdmin = JSON.parse(payload.givenToAdmin);
-    }
-
-    if (payload.takenFromAdmin && typeof payload.takenFromAdmin === "string") {
-      payload.takenFromAdmin = JSON.parse(payload.takenFromAdmin);
-    }
-
-    let screenshotUrl = null;
-    if (req.file) {
-      const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-      const host = req.headers["x-forwarded-host"] || req.get("host");
-      screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
-    }
-
-    const userExists = await personalTransectionalUser.findOne({
-      personalTransectionalUserId: payload.personalTransectionalUserId
-    });
-
-    if (!userExists) {
-      return res.status(404).json({
-        message: "Transaction User not found"
-      });
-    }
-
-    let record = await personalTransectionUserRecord.findOne({
-      personalTransectionalUserId: payload.personalTransectionalUserId
-    });
-
-    if (!record) {
-      record = new personalTransectionUserRecord({
-        personalTransectionalUserId: payload.personalTransectionalUserId,
-      });
-    }
-
-    // ✅ GIVEN TO ADMIN
-    if (payload.givenToAdmin) {
-      const amount = Number(payload.givenToAdmin.Rs);
-
-      if (isNaN(amount)) {
-        return res.status(400).json({ message: "Invalid amount in givenToAdmin" });
-      }
-
-      record.givenToAdmin.push({
-        Rs: amount,
-        paymentMode: payload.givenToAdmin.paymentMode,
-        description: payload.givenToAdmin.description,
-        paymentScreenshoot: screenshotUrl,
-        billno: payload.givenToAdmin.billno,
-        returnDate: payload.givenToAdmin.returnDate,
-        updatedAt: new Date()
-      });
-    }
-
-    // ✅ TAKEN FROM ADMIN
-    if (payload.takenFromAdmin) {
-      const amount = Number(payload.takenFromAdmin.Rs);
-
-      if (isNaN(amount)) {
-        return res.status(400).json({ message: "Invalid amount in takenFromAdmin" });
-      }
-
-      record.takenFromAdmin.push({
-        Rs: amount,
-        paymentMode: payload.takenFromAdmin.paymentMode,
-        description: payload.takenFromAdmin.description,
-        paymentScreenshoot: screenshotUrl,
-        billno: payload.takenFromAdmin.billno,
-        returnDate: payload.takenFromAdmin.returnDate,
-        updatedAt: new Date()
-      });
-    }
-
-    // ✅ RECOMPUTE TOTALS (MOST IMPORTANT)
-    record.totalGiven = record.givenToAdmin.reduce(
-      (sum, item) => sum + Number(item.Rs),
-      0
-    );
-
-    record.totalTaken = record.takenFromAdmin.reduce(
-      (sum, item) => sum + Number(item.Rs),
-      0
-    );
-
-    await record.save();
-
-    return res.status(200).json({
-      message: "Transaction recorded successfully",
-      data: record
-    });
-
-  } catch (err) {
-    console.error("Error in recording transaction:", err);
-    return res.status(500).json({
-      message: "Internal Server Error"
-    });
-  }
 });
 
 const handleToGetPersonalTransectionUserRecordByAdmin = asyncHandler(async (req, res) => {
-  try {
-    const decodedToken = req.user;
+    try {
+        const decodedToken = req.user;
 
-    if (!decodedToken || decodedToken.role !== "admin") {
-      return res.status(403).json({
-        message: "Forbidden: invalid token/Unauthorized access"
-      });
+        if (!decodedToken || decodedToken.role !== "admin") {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+
+        const query = req.query;
+        let matchQuery = {};
+
+        if (query.personalTransectionalUserId) {
+            matchQuery.personalTransectionalUserId = query.personalTransectionalUserId;
+        }
+
+        const personalTransectionRecord =
+            await personalTransectionUserRecord.findOne(matchQuery);
+
+        const countDocuments =
+            await personalTransectionUserRecord.countDocuments(matchQuery);
+
+        if (countDocuments === 0) {
+            return res.status(404).json({
+                message: "No personal transaction records found for the given criteria"
+            });
+        }
+
+        if (!personalTransectionRecord) {
+            return res.status(404).json({
+                message: "Personal transaction record not found"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Personal transaction record fetched successfully",
+            data: personalTransectionRecord,
+            count: countDocuments
+        });
+
+    } catch (err) {
+        console.error("Error in fetching personal transaction record:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
     }
-
-    const query = req.query;
-    let matchQuery = {};
-
-    if (query.personalTransectionalUserId) {
-      matchQuery.personalTransectionalUserId = query.personalTransectionalUserId;
-    }
-
-    const personalTransectionRecord =
-      await personalTransectionUserRecord.findOne(matchQuery);
-
-    const countDocuments =
-      await personalTransectionUserRecord.countDocuments(matchQuery);
-
-    if (countDocuments === 0) {
-      return res.status(404).json({
-        message: "No personal transaction records found for the given criteria"
-      });
-    }
-
-    if (!personalTransectionRecord) {
-      return res.status(404).json({
-        message: "Personal transaction record not found"
-      });
-    }
-
-    return res.status(200).json({
-      message: "Personal transaction record fetched successfully",
-      data: personalTransectionRecord,
-      count: countDocuments
-    });
-
-  } catch (err) {
-    console.error("Error in fetching personal transaction record:", err);
-    return res.status(500).json({
-      message: "Internal Server Error"
-    });
-  }
 });
 
 
