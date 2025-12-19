@@ -15,21 +15,21 @@ const sendWhatsAppMessage = require('../services/whatsapp');
 const hotelStaffCredentials = [
   {
     id: 1,
-    UserName: "HMSAdmin123",
-    Password: "HMSAdmin@123",
-    HBranchName: "HMSAdminBranch",
+    UserName: "Blpoonamhotel",
+    Password: "Blpoonamhotel1234",
+    HBranchName: "Gokulpurabranch",
   },
   {
     id: 2,
-    UserName: "HMSManager01",
-    Password: "HMSManager@321",
-    HBranchName: "HMSMainBranch",
+    UserName: "Blpoonamhotel",
+    Password: "Blpoonamhotel1234",
+    HBranchName: "Sikarbranch",
   },
   {
     id: 3,
-    UserName: "HMSReception9",
-    Password: "HMSRecp#987",
-    HBranchName: "HMSDowntownBranch",
+    UserName: "Blpoonamhotel",
+    Password: "Blpoonamhotel1234",
+    HBranchName: "Sawlibranch",
   },
 ];
 
