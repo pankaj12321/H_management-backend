@@ -625,6 +625,16 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                 message: "Either givenToAdmin or takenFromAdmin must be provided"
             });
         }
+        const checkHotelBranchName = (item) => !item.hotelBranchName;
+
+        if (
+            (payload.givenToAdmin && checkHotelBranchName(payload.givenToAdmin)) ||
+            (payload.takenFromAdmin && checkHotelBranchName(payload.takenFromAdmin))
+        ) {
+            return res.status(400).json({
+                message: "hotelBranchName is required for both givenToAdmin and takenFromAdmin transactions"
+            });
+        }
 
         let screenshotUrl = null;
         if (req.file) {
@@ -643,6 +653,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                 existingRecord.givenToAdmin.push({
                     Rs: payload.givenToAdmin.Rs,
                     paymentScreenshoot: screenshotUrl,
+                    hotelBranchName:payload.givenToAdmin.hotelBranchName,
                     returnDate: payload.givenToAdmin.returnDate,
                     description: payload.givenToAdmin.description,
                     billno: payload.givenToAdmin.billno || null,
@@ -659,6 +670,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                     returnDate: payload.takenFromAdmin.returnDate,
                     paymentScreenshoot: screenshotUrl,
                     description: payload.takenFromAdmin.description,
+                    hotelBranchName:payload.takenFromAdmin.hotelBranchName,
                     billno: payload.takenFromAdmin.billno || null,
                     paymentMode: payload.takenFromAdmin.paymentMode,
                     updatedAt: getISTTime()
@@ -687,6 +699,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                 returnDate: payload.givenToAdmin.returnDate,
                 paymentScreenshoot: screenshotUrl,
                 description: payload.givenToAdmin.description,
+                hotelBranchName:payload.givenToAdmin.hotelBranchName,
                 billno: payload.givenToAdmin.billno || null,
                 paymentMode: payload.givenToAdmin.paymentMode,
                 updatedAt: getISTTime()
@@ -701,6 +714,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                 returnDate: payload.takenFromAdmin.returnDate,
                 paymentScreenshoot: screenshotUrl,
                 description: payload.takenFromAdmin.description,
+                hotelBranchName:payload.takenFromAdmin.hotelBranchName,
                 billno: payload.takenFromAdmin.billno || null,
                 paymentMode: payload.takenFromAdmin.paymentMode,
                 updatedAt: getISTTime()

@@ -6,17 +6,20 @@ const supplierTxnItemSchema = new mongoose.Schema({
         type: String,
         enum: ["cash", "online"],
     },
-    returnDate:{
-        type:Date
+    returnDate: {
+        type: Date
     },
     description: {
         type: String
     },
     paymentScreenshoot: {
-        type: String   
+        type: String
     },
-    billno:{
-        type:Number
+    billno: {
+        type: Number
+    },
+    hotelBranchName: {
+        type: String,
     },
     updatedAt: {
         type: Date,
