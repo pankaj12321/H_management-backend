@@ -33,19 +33,17 @@ const handleToAddStaffUserByAdmin = asyncHandler(async (req, res) => {
         }
 
 
-        const hostUrl = `${req.protocol}://${req.get("host")}`;
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
 
         let profileImageUrl = "";
-        let IdProofImageUrl = "";
+        let idProofImageUrl = "";
 
-        if (req.files?.profileImage) {
-            const file = req.files.profileImage[0].filename;
-            profileImageUrl = `${hostUrl}/uploads/${file}`;
+        if (req.files?.profileImage?.length > 0) {
+            profileImageUrl = `${baseUrl}/uploads/paymentScreenshots/${req.files.profileImage[0].filename}`;
         }
 
-        if (req.files?.IdProofImage) {
-            const file = req.files.IdProofImage[0].filename;
-            IdProofImageUrl = `${hostUrl}/uploads/${file}`;
+        if (req.files?.IdProofImage?.length > 0) {
+            idProofImageUrl = `${baseUrl}/uploads/paymentScreenshots/${req.files.IdProofImage[0].filename}`;
         }
 
         const staffId = entityIdGenerator("ST");
@@ -65,7 +63,7 @@ const handleToAddStaffUserByAdmin = asyncHandler(async (req, res) => {
             DOB: payload.DOB,
             adharNumber: payload.adharNumber,
             profileImage: profileImageUrl,
-            IdProofImage: IdProofImageUrl,
+            IdProofImage: idProofImageUrl,
             createdAt: new Date(),
             updatedAt: new Date(),
             staffId
