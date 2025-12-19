@@ -143,6 +143,19 @@ const handleToUpdateStaffByAdmin = asyncHandler(async (req, res) => {
         if (!existingStaffUser) {
             return res.status(404).json({ message: "Staff user not found" });
         }
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+        let profileImageUrl = existingStaffUser.profileImage;
+        let idProofImageUrl = existingStaffUser.IdProofImage;
+
+        if (req.files?.profileImage?.length > 0) {
+            profileImageUrl = `${baseUrl}/uploads/paymentScreenshots/${req.files.profileImage[0].filename}`;
+        }
+
+        if (req.files?.IdProofImage?.length > 0) {
+            idProofImageUrl = `${baseUrl}/uploads/paymentScreenshots/${req.files.IdProofImage[0].filename}`;
+        }
+
         if (existingStaffUser) {
             const updatedStaff = await Staff.findOneAndUpdate(
                 { staffId: payload.staffId },
@@ -161,6 +174,8 @@ const handleToUpdateStaffByAdmin = asyncHandler(async (req, res) => {
                             country: payload.address?.country || existingStaffUser.address.country
                         },
                         DOB: payload.DOB || existingStaffUser.DOB,
+                        IdProofImage: idProofImageUrl,
+                        profileImage: profileImageUrl,
                         adharNumber: payload.adharNumber || existingStaffUser.adharNumber,
                         updatedAt: new Date()
                     }
