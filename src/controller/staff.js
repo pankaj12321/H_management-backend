@@ -90,23 +90,9 @@ const handleToGetStaffListByAdmin = asyncHandler(async (req, res) => {
         }
         let matchQuery = {};
         let query = req.query;
-        if (query.firstName) {
-            matchQuery.firstName = { $regex: query.firstName, $options: 'i' };
-        }
-        if (query.lastName) {
-            matchQuery.lastName = { $regex: query.lastName, $options: 'i' };
-        }
-        if (query.mobile) {
-            matchQuery.mobile = { $regex: query.mobile, $options: 'i' };
-        }
-        if (query.adharNumber) {
-            matchQuery.adharNumber = { $regex: query.adharNumber, $options: 'i' };
-        }
-        if (query.city) {
-            matchQuery['address.city'] = { $regex: query.city, $options: 'i' };
-        }
+        
         if (query.staffId) {
-            matchQuery.staffId = { $regex: query.staffId, $options: 'i' };
+            matchQuery.staffId = query.staffId
         }
         const staffList = await Staff.find(matchQuery).sort({ createdAt: -1 });
         const countStaffDocuments = await Staff.countDocuments(matchQuery);

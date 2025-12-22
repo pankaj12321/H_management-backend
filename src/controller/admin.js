@@ -193,23 +193,15 @@ const handleToGetAllDriversByAdmin = asyncHandler(async (req, res) => {
     const query = req.query
     let matchQuery = {};
     if (query.name) {
-      matchQuery.name = { $regex: query.name, $options: 'i' };
+      matchQuery.name = query.name
     }
     if (query.carNumber) {
-      matchQuery.carNumber = { $regex: query.carNumber, $options: 'i' };
+      matchQuery.carNumber = query.carNumber
     }
     if (query.mobile) {
-      matchQuery.mobile = { $regex: query.mobile, $options: 'i' };
+      matchQuery.mobile = query.mobile
     }
-    if (query.srNumber) {
-      matchQuery.srNumber = { $regex: query.srNumber, $options: 'i' };
-    }
-    if (query.email) {
-      matchQuery.email = { $regex: query.email, $options: 'i' };
-    }
-    {
-      query.driverId ? (matchQuery.driverId = query.driverId) : null;
-    }
+ 
     const drivers = await Driver.find(matchQuery).sort({ createdAt: -1 });
 
     if (!drivers || drivers.length === 0) {

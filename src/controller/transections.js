@@ -67,18 +67,7 @@ const handleToGetTransectionUserListByAdmin = asyncHandler(async (req, res) => {
         }
         const queryParams = req.query;
         const matchQuery = {};
-        if (queryParams.status) {
-            matchQuery.status = queryParams.status;
-        }
-        if (queryParams.name) {
-            matchQuery.name = { $regex: queryParams.name, $options: 'i' };
-        }
-        if (queryParams.mobile) {
-            matchQuery.mobile = { $regex: queryParams.mobile, $options: 'i' };
-        }
-        if (queryParams.email) {
-            matchQuery.email = { $regex: queryParams.email, $options: 'i' };
-        }
+      
         if (queryParams.transectionUserId) {
             matchQuery.transectionUserId = queryParams.transectionUserId;
         }
@@ -566,15 +555,7 @@ const handleToGetTheHotelSupplierPerson = asyncHandler(async (req, res) => {
         if (query.supplierId) {
             matchQuery.supplierId = query.supplierId;
         }
-        if (query.supplierName) {
-            matchQuery.supplierName = { $regex: query.supplierName, $options: 'i' };
-        }
-        if (query.supplierPhone) {
-            matchQuery.supplierPhone = { $regex: query.supplierPhone, $options: 'i' };
-        }
-        if (query.supplierCompany) {
-            matchQuery.supplierCompany = { $regex: query.supplierCompany, $options: 'i' };
-        }
+        
 
         const suppliers = await Supplier.find(matchQuery).sort({ createdAt: -1 });
         const supplierCount = suppliers.length;
@@ -840,15 +821,7 @@ const handleToGetPersonalUserByAdmin = asyncHandler(async (req, res) => {
         if (queryParams.status) {
             matchQuery.status = queryParams.status;
         }
-        if (queryParams.name) {
-            matchQuery.name = { $regex: queryParams.name, $options: 'i' };
-        }
-        if (queryParams.mobile) {
-            matchQuery.mobile = { $regex: queryParams.mobile, $options: 'i' };
-        }
-        if (queryParams.email) {
-            matchQuery.email = { $regex: queryParams.email, $options: 'i' };
-        }
+        
         if (queryParams.transectionUserId) {
             matchQuery.transectionUserId = queryParams.transectionUserId;
         }
