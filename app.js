@@ -8,39 +8,35 @@ const redisClient = require('./src/config/redis');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to DB
 connectDB();
 
-// Allowed frontend origins
 const allowedOrigins = [
   'http://localhost:4200',
-  'https://blpoonamhotelandrestaurant.netlify.app/',
+  'https://blpoonamhotelandrestaurant.netlify.app',
   'https://hotel-api.duckdns.org'
 ];
 
-// Use a single CORS middleware
+
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // allow non-browser requests (Postman, curl)
+    if (!origin) return callback(null, true); 
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.error('❌ CORS blocked for origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+      return callback(null, true);
     }
+    console.error('❌ CORS blocked for origin:', origin);
+    return callback(new Error('Not allowed by CORS'));
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
   maxAge: 86400
 }));
 
-// Parse JSON and URL-encoded payloads
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.set('trust proxy', true);
 
-// Logging middleware
+app.options('*', cors());
 app.use((req, res, next) => {
   const start = Date.now();
   console.log(`➡️  ${req.method} ${req.originalUrl}`);
