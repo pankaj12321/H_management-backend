@@ -15,7 +15,7 @@ const allowedOrigins = [
   'http://localhost:4200',
   'http://localhost:5174',
   'http://localhost:5000',
-  "https://blpoonmhotelandrestorent.netlify.app",
+  "https://blpoonamhotelrestaurant.netlify.app/",
   'http://35.247.198.237:5000/',
   'http://35.198.28.86:5000'
 ];
