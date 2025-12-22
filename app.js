@@ -8,14 +8,10 @@ const redisClient = require('./src/config/redis');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-/* =========================
-   DATABASE
-========================= */
+
 connectDB();
 
-/* =========================
-   CORS CONFIGURATION
-========================= */
+
 const allowedOrigins = [
   'http://localhost:4200',
   'http://localhost:5174',
@@ -28,7 +24,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow Postman / curl (no origin)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
@@ -43,20 +38,29 @@ app.use(cors({
   credentials: true,
   maxAge: 86400
 }));
+app.use(cors({
+  origin: [
+    'https://blpoonamhotelandrestaurant.netlify.app',
+    'https://your-vercel-app.vercel.app',
+    'https://hotel-api.duckdns.org'
+  ],
+  credentials: true
+}));
 
-// IMPORTANT: Handle preflight
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.options('*', cors());
 
-/* =========================
-   MIDDLEWARES
-========================= */
+
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.set('trust proxy', true);
 
-/* =========================
-   REQUEST LOGGER
-========================= */
+
 app.use((req, res, next) => {
   const start = Date.now();
   console.log(`➡️  ${req.method} ${req.originalUrl}`);
@@ -69,9 +73,7 @@ app.use((req, res, next) => {
   next();
 });
 
-/* =========================
-   ROUTES
-========================= */
+
 app.use('/api', routes);
 
 app.get('/api/health', (req, res) => {
@@ -86,14 +88,10 @@ app.get('/', (req, res) => {
   res.status(200).send('Welcome to the h_management API server!');
 });
 
-/* =========================
-   STATIC FILES
-========================= */
+
 app.use('/uploads', express.static('uploads'));
 
-/* =========================
-   404 HANDLER
-========================= */
+
 app.use((req, res) => {
   console.error('🔎 404 NOT FOUND:', req.method, req.originalUrl);
   return res.status(404).json({
@@ -102,10 +100,8 @@ app.use((req, res) => {
   });
 });
 
-/* =========================
-   SERVER START
-========================= */
-app.listen(PORT, '0.0.0.0', () => {
+
+app.listen(PORT,  () => {
   console.log(`✅ Server running on PORT: ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
