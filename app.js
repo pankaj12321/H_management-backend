@@ -16,13 +16,10 @@ const allowedOrigins = [
   'https://hotel-api.duckdns.org'
 ];
 
-
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true); 
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+    if (!origin) return callback(null, true); // allow Postman/curl
+    if (allowedOrigins.includes(origin)) return callback(null, true);
     console.error('❌ CORS blocked for origin:', origin);
     return callback(new Error('Not allowed by CORS'));
   },
@@ -36,7 +33,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.set('trust proxy', true);
 
-app.options('*', cors());
+// Logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   console.log(`➡️  ${req.method} ${req.originalUrl}`);
@@ -50,19 +47,10 @@ app.use((req, res, next) => {
 // API routes
 app.use('/api', routes);
 
-// Health and welcome routes
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'OK' });
-});
-
-app.get('/api/welcome', (req, res) => {
-  res.status(200).send('Welcome to the h_management API server!');
-});
-
-// Root route
-app.get('/', (req, res) => {
-  res.status(200).send('Welcome to the h_management API server!');
-});
+// Health/welcome routes
+app.get('/api/health', (req, res) => res.status(200).json({ status: 'OK' }));
+app.get('/api/welcome', (req, res) => res.status(200).send('Welcome to the h_management API server!'));
+app.get('/', (req, res) => res.status(200).send('Welcome to the h_management API server!'));
 
 // Serve uploads
 app.use('/uploads', express.static('uploads'));
