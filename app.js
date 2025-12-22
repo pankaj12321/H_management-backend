@@ -10,30 +10,34 @@ const PORT = process.env.PORT || 5000;
 
 connectDB();
 
-const allowedOrigins = [
-  'http://localhost:4200',
-  'https://blpoonamhotelandrestaurant.netlify.app',
-  'https://hotel-api.duckdns.org'
-];
+const corsOptions = {
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'http://localhost:4200',
+      'https://blpoonamhotelandrestaurant.netlify.app',
+    ];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // allow Postman/curl
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    console.error('❌ CORS blocked for origin:', origin);
-    return callback(new Error('Not allowed by CORS'));
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.log('❌ Blocked by CORS:', origin);
+    return callback(new Error('CORS not allowed'));
   },
   credentials: true,
-  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
-  maxAge: 86400
-}));
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.set('trust proxy', true);
 
-// Logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   console.log(`➡️  ${req.method} ${req.originalUrl}`);
@@ -44,18 +48,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// API routes
 app.use('/api', routes);
 
-// Health/welcome routes
 app.get('/api/health', (req, res) => res.status(200).json({ status: 'OK' }));
 app.get('/api/welcome', (req, res) => res.status(200).send('Welcome to the h_management API server!'));
 app.get('/', (req, res) => res.status(200).send('Welcome to the h_management API server!'));
 
-// Serve uploads
 app.use('/uploads', express.static('uploads'));
 
-// 404 handler
 app.use((req, res) => {
   console.error('🔎 404 NOT FOUND:', req.method, req.originalUrl);
   res.status(404).json({
