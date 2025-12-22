@@ -14,9 +14,7 @@ connectDB();
 // Allowed frontend origins
 const allowedOrigins = [
   'http://localhost:4200',
-  'http://localhost:5174',
-  'http://localhost:5000',
-  'https://blpoonamhotelandrestaurant.netlify.app',
+  'https://blpoonamhotelandrestaurant.netlify.app/',
   'https://hotel-api.duckdns.org'
 ];
 
