@@ -15,6 +15,12 @@ const getISTTime = () => {
     return new Date(Date.now() + (5.5 * 60 * 60 * 1000));  // UTC → IST
 };
 
+const getBaseUrl = (req) => {
+    const protocol = (req.headers['x-forwarded-proto'] || req.protocol).split(',')[0].trim();
+    const host = (req.headers['x-forwarded-host'] || req.get('host')).split(',')[0].trim();
+    return `${protocol}://${host}`;
+};
+
 const { personalTransectionalUser } = require('../models/peronalTransectionalUser')
 const personalTransectionUserRecord = require('../models/personalTransectionalRecord')
 
@@ -67,7 +73,7 @@ const handleToGetTransectionUserListByAdmin = asyncHandler(async (req, res) => {
         }
         const queryParams = req.query;
         const matchQuery = {};
-      
+
         if (queryParams.transectionUserId) {
             matchQuery.transectionUserId = queryParams.transectionUserId;
         }
@@ -121,9 +127,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
 
         let screenshotUrl = null;
         if (req.file) {
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-            const host = req.headers['x-forwarded-host'] || req.get('host');
-            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
+            screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
         }
 
         const transectionUserRecord = await TransactionalUser.findOne({
@@ -348,9 +352,7 @@ const handleToAddTheHotelExpense = asyncHandler(async (req, res) => {
 
         let screenshotUrl = null;
         if (req.file) {
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-            const host = req.headers['x-forwarded-host'] || req.get('host');
-            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
+            screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
         }
 
         const newExpense = new Expense({
@@ -403,10 +405,8 @@ const handleToAddTheHotelEarning = asyncHandler(async (req, res) => {
 
         let screenshotUrl = null;
         if (req.file) {
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-            const host = req.headers['x-forwarded-host'] || req.get('host');
 
-            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
+            screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
         }
 
         const newEarning = new Earning({
@@ -555,7 +555,7 @@ const handleToGetTheHotelSupplierPerson = asyncHandler(async (req, res) => {
         if (query.supplierId) {
             matchQuery.supplierId = query.supplierId;
         }
-        
+
 
         const suppliers = await Supplier.find(matchQuery).sort({ createdAt: -1 });
         const supplierCount = suppliers.length;
@@ -619,9 +619,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
 
         let screenshotUrl = null;
         if (req.file) {
-            const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-            const host = req.headers['x-forwarded-host'] || req.get('host');
-            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
+            screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
         }
 
         let existingRecord = await SupplierTransactionRecord.findOne({
@@ -634,7 +632,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                 existingRecord.givenToAdmin.push({
                     Rs: payload.givenToAdmin.Rs,
                     paymentScreenshoot: screenshotUrl,
-                    hotelBranchName:payload.givenToAdmin.hotelBranchName,
+                    hotelBranchName: payload.givenToAdmin.hotelBranchName,
                     returnDate: payload.givenToAdmin.returnDate,
                     description: payload.givenToAdmin.description,
                     billno: payload.givenToAdmin.billno || null,
@@ -651,7 +649,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                     returnDate: payload.takenFromAdmin.returnDate,
                     paymentScreenshoot: screenshotUrl,
                     description: payload.takenFromAdmin.description,
-                    hotelBranchName:payload.takenFromAdmin.hotelBranchName,
+                    hotelBranchName: payload.takenFromAdmin.hotelBranchName,
                     billno: payload.takenFromAdmin.billno || null,
                     paymentMode: payload.takenFromAdmin.paymentMode,
                     updatedAt: getISTTime()
@@ -680,7 +678,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                 returnDate: payload.givenToAdmin.returnDate,
                 paymentScreenshoot: screenshotUrl,
                 description: payload.givenToAdmin.description,
-                hotelBranchName:payload.givenToAdmin.hotelBranchName,
+                hotelBranchName: payload.givenToAdmin.hotelBranchName,
                 billno: payload.givenToAdmin.billno || null,
                 paymentMode: payload.givenToAdmin.paymentMode,
                 updatedAt: getISTTime()
@@ -695,7 +693,7 @@ const handleToAddSupplierTransaction = asyncHandler(async (req, res) => {
                 returnDate: payload.takenFromAdmin.returnDate,
                 paymentScreenshoot: screenshotUrl,
                 description: payload.takenFromAdmin.description,
-                hotelBranchName:payload.takenFromAdmin.hotelBranchName,
+                hotelBranchName: payload.takenFromAdmin.hotelBranchName,
                 billno: payload.takenFromAdmin.billno || null,
                 paymentMode: payload.takenFromAdmin.paymentMode,
                 updatedAt: getISTTime()
@@ -821,7 +819,7 @@ const handleToGetPersonalUserByAdmin = asyncHandler(async (req, res) => {
         if (queryParams.status) {
             matchQuery.status = queryParams.status;
         }
-        
+
         if (queryParams.transectionUserId) {
             matchQuery.transectionUserId = queryParams.transectionUserId;
         }
@@ -870,9 +868,7 @@ const handleToMakeTransectionBetweenAdminAndPersonalUser = asyncHandler(async (r
 
         let screenshotUrl = null;
         if (req.file) {
-            const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-            const host = req.headers["x-forwarded-host"] || req.get("host");
-            screenshotUrl = `${protocol}://${host}/uploads/paymentScreenshots/${req.file.filename}`;
+            screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
         }
 
         const userExists = await personalTransectionalUser.findOne({
