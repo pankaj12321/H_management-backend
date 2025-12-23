@@ -42,8 +42,10 @@ const corsOptions = {
   ],
 };
 
-app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
+if (process.env.DISABLE_CORS !== 'true') {
+  app.use(cors(corsOptions));
+  app.options(/.*/, cors(corsOptions));
+}
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
