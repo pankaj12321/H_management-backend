@@ -15,8 +15,11 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:4200',
       'http://localhost:5000',
+      'http://127.0.0.1:4200',
+      'http://127.0.0.1:5000',
       'https://blpoonamhotelandrestaurant.netlify.app',
-      'https://hotel-api.duckdns.org'
+      'https://hotel-api.duckdns.org',
+      ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
     ];
 
     if (!origin) return callback(null, true);
