@@ -7,35 +7,38 @@ const driverCommisionEntrySchema = new mongoose.Schema(
       type: String,
     },
     driverId: {
-        type:String,
+      type: String,
     },
-    driverName:{
-        type:String,
-        
+    driverName: {
+      type: String,
+
     },
-    carNumber:{
-        type:String,
+    carNumber: {
+      type: String,
     },
-    mobile:{
-        type:String,
+    mobile: {
+      type: String,
     },
-    srNumber:{
-        type:String,
+    srNumber: {
+      type: String,
     },
-    driverCommisionAmount:{
-        type:Number,
-        default:0,
+    driverCommisionAmount: {
+      type: Number,
+      default: 0,
     },
-    partyAmount:{
-        type:Number,
-        default:0,
+    description: {
+      type: String,
     },
-    status:{
-        type:String,
+    partyAmount: {
+      type: Number,
+      default: 0,
     },
-    entryDate:{
-        type:Date,
-        default:Date.now,
+    status: {
+      type: String,
+    },
+    entryDate: {
+      type: Date,
+      default: Date.now,
     },
     createdAt: {
       type: Date,
@@ -45,7 +48,7 @@ const driverCommisionEntrySchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-},
+  },
   { timestamps: true }
 );
 const DriverCommisionEntry = mongoose.model("DriverCommisionEntry", driverCommisionEntrySchema);

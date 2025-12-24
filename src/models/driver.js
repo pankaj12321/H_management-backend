@@ -6,22 +6,25 @@ const driverSchema = new mongoose.Schema(
     driverId: {
       type: String,
     },
-    name:{
-        type:String,
-        
+    name: {
+      type: String,
+
     },
-    carNumber:{
-        type:String,
+    carNumber: {
+      type: String,
     },
-    mobile:{
-        type:String,
+    mobile: {
+      type: String,
     },
-    location:{
-        type:String,
+    location: {
+      type: String,
     },
-    srNumber:{
-        type:String,
-        unique:true,
+    srNumber: {
+      type: String,
+      unique: true,
+    },
+    salary: {
+      type: Number,
     },
     createdAt: {
       type: Date,
@@ -31,7 +34,7 @@ const driverSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-},
+  },
   { timestamps: true }
 );
 

@@ -63,6 +63,7 @@ const handleToAddStaffUserByAdmin = asyncHandler(async (req, res) => {
             DOB: payload.DOB,
             adharNumber: payload.adharNumber,
             profileImage: profileImageUrl,
+            branchName: payload.branchName,
             IdProofImage: idProofImageUrl,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -90,7 +91,7 @@ const handleToGetStaffListByAdmin = asyncHandler(async (req, res) => {
         }
         let matchQuery = {};
         let query = req.query;
-        
+
         if (query.staffId) {
             matchQuery.staffId = query.staffId
         }

@@ -23,6 +23,9 @@ const staffSchema = new mongoose.Schema({
     age: {
         type: Number,
     },
+    branchName: {
+        type: String,
+    },
     gender: {
         type: String,
     },

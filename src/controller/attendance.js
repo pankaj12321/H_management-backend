@@ -25,7 +25,7 @@ const handleToMarkAttendanceOfStaff = async (req, res, next) => {
 
     if (
       !payload.staffId ||
-      !["Present", "Absent", "Half Day","Paid Leave"].includes(attendanceValue)
+      !["Present", "Absent", "Half Day", "Paid Leave"].includes(attendanceValue)
     ) {
       return res.status(400).json({
         message:
@@ -39,9 +39,12 @@ const handleToMarkAttendanceOfStaff = async (req, res, next) => {
     }
 
     const now = new Date();
-    const currentDate = now.getDate();
-    const currentMonth = now.getMonth() + 1; // 0-based
-    const currentYear = now.getFullYear();
+
+    // Get IST date components
+    const istDate = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const currentDate = istDate.getDate();
+    const currentMonth = istDate.getMonth() + 1; // 0-based
+    const currentYear = istDate.getFullYear();
 
     const existingAttendance = await attendanceRecord.findOne({
       staffId: payload.staffId,
@@ -71,6 +74,7 @@ const handleToMarkAttendanceOfStaff = async (req, res, next) => {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
+          timeZone: "Asia/Kolkata",
         }),
       },
       attendanceStatus: "Marked",
@@ -80,7 +84,7 @@ const handleToMarkAttendanceOfStaff = async (req, res, next) => {
 
     return res.status(201).json({
       message: "Attendance marked successfully.",
-      data: attendanceData.toObject(),   
+      data: attendanceData.toObject(),
     });
   } catch (err) {
     console.error("Error in marking staff attendance:", err);
@@ -205,16 +209,16 @@ const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
         message: "Bad Request! Please provide all required fields: date, month, year, staffId, and attendance.",
       });
     }
-    if (!["Present", "Absent", "Half Day","Paid Leave"].includes(payload.attendance)) {
+    if (!["Present", "Absent", "Half Day", "Paid Leave"].includes(payload.attendance)) {
       return res.status(400).json({
         message: "Bad Request! Invalid attendance status.",
       });
     }
-    const todaysDate = new Date();
+    const todaysDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
     if (payload.year > todaysDate.getFullYear() ||
       (payload.year === todaysDate.getFullYear() && payload.month > (todaysDate.getMonth() + 1)) ||
       (payload.year === todaysDate.getFullYear() && payload.month === (todaysDate.getMonth() + 1) &&
-      payload.date > todaysDate.getDate())) {
+        payload.date > todaysDate.getDate())) {
       return res.status(400).json({
         message: "Bad Request! Cannot update attendance for future dates.",
       });
@@ -243,6 +247,7 @@ const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
+        timeZone: "Asia/Kolkata",
       });
       record.attendanceStatus = "Edited";
       await record.save();

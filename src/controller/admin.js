@@ -116,6 +116,7 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
         mobile: payload.mobile,
         email: payload.email,
         srNumber: payload.srNumber,
+        salary: payload.salary,
         location: payload.location,
         addedBy: decoded.user
 
@@ -135,14 +136,14 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
 });
 
 const handleToEditTheDriverProfileByAdmin = asyncHandler(async (req, res) => {
-  try{
+  try {
     const decoded = req.user;
     if (!decoded) {
       return res
         .status(403)
         .json({ message: "Forbidden! You are not authorized to edit driver profile" });
     }
-    const { driverId, name, carNumber, mobile , srNumber } = req.body;
+    const { driverId, name, carNumber, mobile, srNumber } = req.body;
     if (!driverId) {
       return res.status(400).json({ message: "driverId is required" });
     }
@@ -163,7 +164,7 @@ const handleToEditTheDriverProfileByAdmin = asyncHandler(async (req, res) => {
     const updatedDriver = await Driver.findOneAndUpdate(
       { driverId },
       { $set: updateObject },
-      { new: true } 
+      { new: true }
     );
 
     if (!updatedDriver) {
@@ -173,7 +174,7 @@ const handleToEditTheDriverProfileByAdmin = asyncHandler(async (req, res) => {
     res.status(200).json({
       message: "Driver profile updated successfully",
       driver: updatedDriver,
-    }); 
+    });
 
   }
   catch (err) {
@@ -201,7 +202,7 @@ const handleToGetAllDriversByAdmin = asyncHandler(async (req, res) => {
     if (query.mobile) {
       matchQuery.mobile = query.mobile
     }
- 
+
     const drivers = await Driver.find(matchQuery).sort({ createdAt: -1 });
 
     if (!drivers || drivers.length === 0) {
@@ -234,6 +235,7 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
       partyAmount: payload.partyAmount || 0,
       status: payload.status || "pending",
       entryDate: payload.entryDate || Date.now(),
+      description: payload.description || "",
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
@@ -247,7 +249,7 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
     - Status: ${payload.status || "pending"}
     - Entry Date: ${new Date(payload.entryDate || Date.now()).toLocaleString()}`;
 
-await sendWhatsAppMessage("+918690858238", messageContent);
+    await sendWhatsAppMessage("+918690858238", messageContent);
 
     res.status(201).json({ message: "Driver commission entry added successfully", entry: newEntry });
   } catch (err) {
@@ -296,19 +298,19 @@ const handleToGetListOfDriverCommisionEntriesByAdmin = asyncHandler(async (req, 
 
 const handleToEditDriverCommisionEntryByAdmin = asyncHandler(async (req, res) => {
   try {
-    const decoded = req.user; 
+    const decoded = req.user;
     if (!decoded) {
       return res.status(403).json({
-        message: "Forbidden! You are not authorized to edit driver commission entry", 
+        message: "Forbidden! You are not authorized to edit driver commission entry",
       });
     }
 
     const { entryId, driverCommisionAmount, partyAmount, status, entryDate, driverId } = req.body;
-    if (!entryId||!driverId) {
+    if (!entryId || !driverId) {
       return res.status(400).json({ message: "entryId and driverId are required" });
     }
 
-    const commissionEntryDetails = await DriverCommisionEntry.findOne({ entryId , driverId });
+    const commissionEntryDetails = await DriverCommisionEntry.findOne({ entryId, driverId });
     if (!commissionEntryDetails) {
       return res.status(404).json({ message: "Driver commission entry not found" });
     }
@@ -324,7 +326,7 @@ const handleToEditDriverCommisionEntryByAdmin = asyncHandler(async (req, res) =>
     const updatedEntry = await DriverCommisionEntry.findOneAndUpdate(
       { entryId },
       { $set: updateObject },
-      { new: true } 
+      { new: true }
     );
 
     if (!updatedEntry) {
