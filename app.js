@@ -10,15 +10,20 @@ const PORT = process.env.PORT || 5000;
 
 connectDB();
 
+const allowedOrigins = [
+  'http://localhost:4200',
+  'http://localhost:5000',
+  'https://blpoonamhotelandrestaurant.netlify.app',
+  'https://hotel-api.duckdns.org'
+];
+
+if (process.env.ALLOWED_ORIGINS) {
+  const envOrigins = process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
+  allowedOrigins.push(...envOrigins);
+}
+
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = [
-      'http://localhost:4200',
-      'http://localhost:5000',
-      'https://blpoonamhotelandrestaurant.netlify.app',
-      'https://hotel-api.duckdns.org'
-    ];
-
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
@@ -41,10 +46,24 @@ const corsOptions = {
     'Access-Control-Allow-Origin'
   ],
 };
-if (process.env.DISABLE_CORS !== 'true') {
-  app.use(cors(corsOptions));
-  app.options(/.*/, cors(corsOptions));
-}
+
+const dynamicCorsMiddleware = (req, res, next) => {
+  if (process.env.DISABLE_CORS === 'true') {
+    return next();
+  }
+
+  const host = req.get('host');
+
+  if (host && host.includes('hotel-api.duckdns.org')) {
+    return next();
+  }
+
+  return cors(corsOptions)(req, res, next);
+};
+
+console.log('✅ Dynamic CORS initialized. Production host skips Node CORS; Localhost uses Node CORS.');
+app.use(dynamicCorsMiddleware);
+app.options(/.*/, dynamicCorsMiddleware);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
