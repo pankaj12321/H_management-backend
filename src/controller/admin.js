@@ -318,6 +318,7 @@ const handleToEditDriverCommisionEntryByAdmin = asyncHandler(async (req, res) =>
     const updateObject = {
       driverCommisionAmount: driverCommisionAmount ?? commissionEntryDetails.driverCommisionAmount,
       partyAmount: partyAmount ?? commissionEntryDetails.partyAmount,
+      description: description ?? commissionEntryDetails.description,
       status: status ?? commissionEntryDetails.status,
       entryDate: entryDate ?? commissionEntryDetails.entryDate,
       updatedAt: Date.now(),

@@ -64,6 +64,7 @@ const handleToAddStaffUserByAdmin = asyncHandler(async (req, res) => {
             adharNumber: payload.adharNumber,
             profileImage: profileImageUrl,
             branchName: payload.branchName,
+            salary:payload.salary,
             IdProofImage: idProofImageUrl,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -155,6 +156,8 @@ const handleToUpdateStaffByAdmin = asyncHandler(async (req, res) => {
                         age: payload.age || existingStaffUser.age,
                         role: payload.role || existingStaffUser.role,
                         gender: payload.gender || existingStaffUser.gender,
+                        branchName:payload.branchName || existingStaffUser.branchName,
+                        salary:payload.salary || existingStaffUser.salary,
                         address: {
                             city: payload.address?.city || existingStaffUser.address.city,
                             state: payload.address?.state || existingStaffUser.address.state,

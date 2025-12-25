@@ -26,6 +26,9 @@ const staffSchema = new mongoose.Schema({
     branchName: {
         type: String,
     },
+    salary:{
+        type:Number
+    },
     gender: {
         type: String,
     },
