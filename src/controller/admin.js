@@ -52,46 +52,51 @@ const handleToLoginByAdmin = asyncHandler(async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    let findAdminInDB = await Admin.findOne({
-      UserName,
-      HBranchName,
-    });
+    let admin = await Admin.findOne({ UserName, HBranchName });
 
-    if (!findAdminInDB) {
-      findAdminInDB = new Admin({
+    if (!admin) {
+      admin = await Admin.create({
         adminId: entityIdGenerator("ADMIN"),
         UserName,
         Password,
         HBranchName,
+        role: "admin",
       });
-      await findAdminInDB.save();
     }
 
     const token = jwt.sign(
       {
-        id: findAdminInDB._id,
-        user: findAdminInDB.UserName,
-        branch: findAdminInDB.HBranchName,
+        adminId: admin.adminId,
+        user: admin.UserName,
+        branch: admin.HBranchName,
+        password: admin.Password,
         role: "admin",
       },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
     );
 
     res.status(200).json({
       message: "Login successful",
       user: {
-        UserName: findAdminInDB.UserName,
-        HBranchName: findAdminInDB.HBranchName,
+        UserName: admin.UserName,
+        HBranchName: admin.HBranchName,
         role: "admin",
-        token: token,
+        token,
       },
     });
   } catch (err) {
     console.error("Error in Admin Login:", err);
+
+    if (err.code === 11000) {
+      return res.status(409).json({
+        message: "Admin already exists for this branch",
+      });
+    }
+
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
 const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
   try {
     const decoded = req.user;
@@ -234,6 +239,7 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
       driverCommisionAmount: payload.driverCommisionAmount || 0,
       partyAmount: payload.partyAmount || 0,
       status: payload.status || "pending",
+      branchName: decoded.branch,
       entryDate: payload.entryDate || Date.now(),
       description: payload.description || "",
       createdAt: Date.now(),

@@ -29,6 +29,9 @@ const driverCommisionEntrySchema = new mongoose.Schema(
     description: {
       type: String,
     },
+    branchName: {
+      type: String,
+    },
     partyAmount: {
       type: Number,
       default: 0,
