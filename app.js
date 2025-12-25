@@ -15,18 +15,13 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:4200',
       'http://localhost:5000',
-      'http://127.0.0.1:4200',
-      'http://127.0.0.1:5000',
       'https://blpoonamhotelandrestaurant.netlify.app',
-      'https://hotel-api.duckdns.org',
+      'https://hotel-api.duckdns.org'
     ];
-
-    const envOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [];
-    const allOrigins = [...allowedOrigins, ...envOrigins].map(url => url.replace(/\/$/, ""));
 
     if (!origin) return callback(null, true);
 
-    if (allOrigins.includes(origin.replace(/\/$/, ""))) {
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
       return callback(null, true);
     } else {
       console.log('❌ Blocked by CORS:', origin);
@@ -46,9 +41,9 @@ const corsOptions = {
     'Access-Control-Allow-Origin'
   ],
 };
-
 if (process.env.DISABLE_CORS !== 'true') {
   app.use(cors(corsOptions));
+  app.options(/.*/, cors(corsOptions));
 }
 
 app.use(express.json());
