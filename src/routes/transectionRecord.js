@@ -19,7 +19,13 @@ const {
     handleToAddPersonalTransectionalUser,
     handleToGetPersonalUserByAdmin,
     handleToMakeTransectionBetweenAdminAndPersonalUser,
-    handleToGetPersonalTransectionUserRecordByAdmin
+    handleToGetPersonalTransectionUserRecordByAdmin,
+    handleToMakeTransectionBetweenAdminAndPersonalCustomer,
+    handleToCreatePersonalTransectionCustomer,
+    handleToGetPersonalCustomerListByAdmin,
+    handleToGetPersonalCustomerTransectionRecordByAdmin,
+    handleTodeleteTheCustomerTransectionEntry,
+    handleToUpdateTheCustomerTransectionEntry
 } = require('../controller/transections');
 
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
@@ -55,13 +61,20 @@ router.get('/get/total-taken-amount', handleToCalculateTotalTakenAndGivenMoney)
 
 
 
-router.post('/add/personal/transectionalUser', verifyToken, handleToAddPersonalTransectionalUser)
 router.get('/get/personal/transectional/user', verifyToken, handleToGetPersonalUserByAdmin)
 router.post('/make/personal/user/transection', verifyToken, upload.single("paymentScreenshoot"),
     handleToMakeTransectionBetweenAdminAndPersonalUser)
-router.get('/get/personal/transectional/record',verifyToken,handleToGetPersonalTransectionUserRecordByAdmin)    
+router.get('/get/personal/transectional/record', verifyToken, handleToGetPersonalTransectionUserRecordByAdmin)
 
+// routes for personal customer transection
+router.post('/add/personal/customer', verifyToken, handleToCreatePersonalTransectionCustomer)
 
+router.get('/get/personal/customer/users', verifyToken, handleToGetPersonalCustomerListByAdmin)
+
+router.post('/add/personal/customer/transection', verifyToken, upload.single("paymentScreenshoot"), handleToMakeTransectionBetweenAdminAndPersonalCustomer)
+router.get('/get/personal/customer/transection', verifyToken, handleToGetPersonalCustomerTransectionRecordByAdmin)
+router.delete('/delete/personal/customer/transection/entry', verifyToken, handleTodeleteTheCustomerTransectionEntry)
+router.patch('/update/personal/customer/transection/entry', verifyToken, upload.single("paymentScreenshoot"), handleToUpdateTheCustomerTransectionEntry)
 
 const transectionRecordRouter = router
 module.exports = transectionRecordRouter;

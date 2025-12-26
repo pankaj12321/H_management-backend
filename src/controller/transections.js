@@ -11,6 +11,8 @@ const { Earning } = require('../models/expense_earning')
 const { Expense } = require('../models/expense_earning')
 const Supplier = require('../models/supplier')
 const SupplierTransactionRecord = require('../models/supplier-transection-record')
+const { personalCustomerRecordTran } = require('../models/personalCustomerUser')
+const personalCustomerTransectionRecord = require('../models/personalCustomerTransectionRecord')
 const getISTTime = () => {
     return new Date(Date.now() + (5.5 * 60 * 60 * 1000));  // UTC → IST
 };
@@ -1004,6 +1006,365 @@ const handleToGetPersonalTransectionUserRecordByAdmin = asyncHandler(async (req,
     }
 });
 
+// handle the api's of personal transection customer user ::::::::::::::::::::::::::::::::::::::;
+const handleToCreatePersonalTransectionCustomer = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+
+        const payload = req.body;
+
+        if (!payload.name || !payload.mobile || !payload.city) {
+            return res.status(400).json({
+                message: "Invalid Payload: 'name', 'mobile' and 'city' are required"
+            });
+        }
+
+        const existingUser = await personalCustomerRecordTran.findOne({ mobile: payload.mobile });
+        if (existingUser) {
+            return res.status(409).json({ message: "Personal transection user with this mobile number already exists." });
+        }
+
+        const newPersonalTransectionUser = new personalCustomerRecordTran({
+            name: payload.name,
+            mobile: payload.mobile,
+            email: payload.email,
+            city: payload.city,
+            state: payload.state,
+            personalCustomerRecordTranId: entityIdGenerator("PT"),
+            status: 'Active',
+            createdAt: Date.now(),
+
+        });
+
+        await newPersonalTransectionUser.save();
+
+        return res.status(201).json({ message: "Personal transection user created successfully", data: newPersonalTransectionUser });
+    } catch (err) {
+        console.error("Error in creating personal transection user:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+const handleToGetPersonalCustomerListByAdmin = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+
+        const query = req.query;
+        let matchQuery = {};
+
+        if (query.personalCustomerRecordTranId) {
+            matchQuery.personalCustomerRecordTranId = query.personalCustomerRecordTranId;
+        }
+
+        const personalTransectionRecord =
+            await personalCustomerRecordTran.find(matchQuery);
+
+        const countDocuments =
+            await personalCustomerRecordTran.countDocuments(matchQuery);
+
+        if (countDocuments === 0) {
+            return res.status(404).json({
+                message: "No personal transaction records found for the given criteria"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Personal transaction record fetched successfully",
+            data: personalTransectionRecord,
+            count: countDocuments
+        });
+
+    } catch (err) {
+        console.error("Error in fetching personal transaction record:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+
+
+
+const handleToMakeTransectionBetweenAdminAndPersonalCustomer = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== "admin") {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+
+        const payload = req.body;
+
+        if (!payload.personalCustomerRecordTranId) {
+            return res.status(400).json({
+                message: "Invalid Payload: personalCustomerRecordTranId is required"
+            });
+        }
+
+        if (!payload.givenToAdmin && !payload.takenFromAdmin) {
+            return res.status(400).json({
+                message: "Either givenToAdmin or takenFromAdmin must be provided"
+            });
+        }
+
+        if (payload.givenToAdmin && typeof payload.givenToAdmin === "string") {
+            payload.givenToAdmin = JSON.parse(payload.givenToAdmin);
+        }
+
+        if (payload.takenFromAdmin && typeof payload.takenFromAdmin === "string") {
+            payload.takenFromAdmin = JSON.parse(payload.takenFromAdmin);
+        }
+
+        let screenshotUrl = null;
+        if (req.file) {
+            screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
+        }
+
+        const userExists = await personalCustomerRecordTran.findOne({
+            personalCustomerRecordTranId: payload.personalCustomerRecordTranId
+        });
+
+        if (!userExists) {
+            return res.status(404).json({
+                message: "Transaction Customer not found"
+            });
+        }
+
+        let record = await personalCustomerTransectionRecord.findOne({
+            personalCustomerRecordTranId: payload.personalCustomerRecordTranId
+        });
+
+        if (!record) {
+            record = new personalCustomerTransectionRecord({
+                personalCustomerRecordTranId: payload.personalCustomerRecordTranId,
+            });
+        }
+
+        // ✅ GIVEN TO ADMIN
+        if (payload.givenToAdmin) {
+            const amount = Number(payload.givenToAdmin.Rs);
+
+            if (isNaN(amount)) {
+                return res.status(400).json({ message: "Invalid amount in givenToAdmin" });
+            }
+
+            record.givenToAdmin.push({
+                Rs: amount,
+                paymentMode: payload.givenToAdmin.paymentMode,
+                description: payload.givenToAdmin.description,
+                paymentScreenshoot: screenshotUrl,
+                billno: payload.givenToAdmin.billno,
+                returnDate: payload.givenToAdmin.returnDate,
+                updatedAt: new Date()
+            });
+        }
+
+        // ✅ TAKEN FROM ADMIN
+        if (payload.takenFromAdmin) {
+            const amount = Number(payload.takenFromAdmin.Rs);
+
+            if (isNaN(amount)) {
+                return res.status(400).json({ message: "Invalid amount in takenFromAdmin" });
+            }
+
+            record.takenFromAdmin.push({
+                Rs: amount,
+                paymentMode: payload.takenFromAdmin.paymentMode,
+                description: payload.takenFromAdmin.description,
+                paymentScreenshoot: screenshotUrl,
+                billno: payload.takenFromAdmin.billno,
+                returnDate: payload.takenFromAdmin.returnDate,
+                updatedAt: new Date()
+            });
+        }
+
+        // ✅ RECOMPUTE TOTALS
+        record.totalGiven = record.givenToAdmin.reduce(
+            (sum, item) => sum + Number(item.Rs),
+            0
+        );
+
+        record.totalTaken = record.takenFromAdmin.reduce(
+            (sum, item) => sum + Number(item.Rs),
+            0
+        );
+
+        await record.save();
+
+        return res.status(200).json({
+            message: "Transaction recorded successfully",
+            data: record
+        });
+
+    } catch (err) {
+        console.error("Error in recording transaction:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+});
+
+const handleToGetPersonalCustomerTransectionRecordByAdmin = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+        const queryParams = req.query;
+        const matchQuery = {};
+
+        if (queryParams.personalCustomerRecordTranId) {
+            matchQuery.personalCustomerRecordTranId = queryParams.personalCustomerRecordTranId;
+        }
+
+        const transectionUsers = await personalCustomerTransectionRecord.find(matchQuery).sort({ createdAt: -1 });
+
+        return res.status(200).json({ message: "Transection Users fetched successfully", data: transectionUsers });
+    } catch (err) {
+        console.error("Error in fetching Transection Users:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+const handleTodeleteTheCustomerTransectionEntry = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+        const payload = req.body;
+
+        if (!payload.personalCustomerRecordTranId || !payload._id) {
+            return res.status(400).json({
+                message: "Invalid Payload: personalCustomerRecordTranId and _id are required"
+            });
+        }
+
+        const record = await personalCustomerTransectionRecord.findOne({
+            personalCustomerRecordTranId: payload.personalCustomerRecordTranId
+        });
+
+        if (!record) {
+            return res.status(404).json({ message: "Transaction Record not found" });
+        }
+
+        // Check if the transaction exists in givenToAdmin
+        const givenIndex = record.givenToAdmin.findIndex(
+            (item) => item._id.toString() === payload._id
+        );
+
+        if (givenIndex !== -1) {
+            record.givenToAdmin.splice(givenIndex, 1);
+        } else {
+            // Check if the transaction exists in takenFromAdmin
+            const takenIndex = record.takenFromAdmin.findIndex(
+                (item) => item._id.toString() === payload._id
+            );
+
+            if (takenIndex !== -1) {
+                record.takenFromAdmin.splice(takenIndex, 1);
+            } else {
+                return res.status(404).json({ message: "Transaction Entry not found with this ID" });
+            }
+        }
+
+        record.totalGiven = record.givenToAdmin.reduce((sum, item) => sum + item.Rs, 0);
+        record.totalTaken = record.takenFromAdmin.reduce((sum, item) => sum + item.Rs, 0);
+
+        await record.save();
+
+        return res.status(200).json({
+            message: "Transaction Entry deleted successfully",
+            data: record
+        });
+    } catch (err) {
+        console.error("Error in deleting Transection Entry:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+const handleToUpdateTheCustomerTransectionEntry = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+
+        const payload = req.body;
+
+        if (!payload.personalCustomerRecordTranId || !payload._id) {
+            return res.status(400).json({
+                message: "Invalid Payload: personalCustomerRecordTranId and _id are required"
+            });
+        }
+
+        const record = await personalCustomerTransectionRecord.findOne({
+            personalCustomerRecordTranId: payload.personalCustomerRecordTranId
+        });
+
+        if (!record) {
+            return res.status(404).json({ message: "Transaction Record not found" });
+        }
+
+        let screenshotUrl = null;
+        if (req.file) {
+            screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
+        }
+
+        let entryFound = false;
+
+        // Helper to update fields
+        const updateFields = (item) => {
+            if (payload.Rs) item.Rs = Number(payload.Rs);
+            if (payload.paymentMode) item.paymentMode = payload.paymentMode;
+            if (payload.description) item.description = payload.description;
+            if (payload.billno) item.billno = payload.billno;
+            if (payload.returnDate) item.returnDate = payload.returnDate;
+            if (screenshotUrl) item.paymentScreenshoot = screenshotUrl;
+            item.updatedAt = new Date();
+        };
+
+        // Search in givenToAdmin
+        const givenItem = record.givenToAdmin.id(payload._id);
+        if (givenItem) {
+            updateFields(givenItem);
+            entryFound = true;
+        } else {
+            // Search in takenFromAdmin
+            const takenItem = record.takenFromAdmin.id(payload._id);
+            if (takenItem) {
+                updateFields(takenItem);
+                entryFound = true;
+            }
+        }
+
+        if (!entryFound) {
+            return res.status(404).json({ message: "Transaction Entry not found with this ID" });
+        }
+
+        // Recalculate totals
+        record.totalGiven = record.givenToAdmin.reduce((sum, item) => sum + item.Rs, 0);
+        record.totalTaken = record.takenFromAdmin.reduce((sum, item) => sum + item.Rs, 0);
+
+        await record.save();
+
+        return res.status(200).json({
+            message: "Transaction Entry updated successfully",
+            data: record
+        });
+
+    } catch (err) {
+        console.error("Error in updating Transection Entry:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
 
 module.exports = {
     handleToCreateTransectionUser,
@@ -1022,5 +1383,11 @@ module.exports = {
     handleToAddPersonalTransectionalUser,
     handleToGetPersonalUserByAdmin,
     handleToMakeTransectionBetweenAdminAndPersonalUser,
-    handleToGetPersonalTransectionUserRecordByAdmin
+    handleToGetPersonalTransectionUserRecordByAdmin,
+    handleToCreatePersonalTransectionCustomer,
+    handleToGetPersonalCustomerListByAdmin,
+    handleToMakeTransectionBetweenAdminAndPersonalCustomer,
+    handleToGetPersonalCustomerTransectionRecordByAdmin,
+    handleTodeleteTheCustomerTransectionEntry,
+    handleToUpdateTheCustomerTransectionEntry
 };

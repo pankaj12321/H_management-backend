@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const personalTransactionalItemSchema = new mongoose.Schema({
+const personalTransectionRecordSchema = new mongoose.Schema({
     Rs: { type: Number },
     paymentMode: {
         type: String,
@@ -24,18 +24,18 @@ const personalTransactionalItemSchema = new mongoose.Schema({
     }
 });
 
-const personalTransectionUserRecordSchema = mongoose.Schema({
-    personalTransectionalUserId: {
+const personalCustomerTransectionRecordSchema = mongoose.Schema({
+    personalCustomerRecordTranId: {
         type: String,
     },
 
     givenToAdmin: {
-        type: [personalTransactionalItemSchema],
+        type: [personalTransectionRecordSchema],
         default: [],
     },
 
     takenFromAdmin: {
-        type: [personalTransactionalItemSchema],
+        type: [personalTransectionRecordSchema],
         default: [],
     },
 
@@ -50,5 +50,5 @@ const personalTransectionUserRecordSchema = mongoose.Schema({
     },
 }, { timestamps: true });
 
-const personalTransectionUserRecord = mongoose.model('personalTransectionUserRecord', personalTransectionUserRecordSchema);
-module.exports = personalTransectionUserRecord;
+const personalCustomerTransectionRecord = mongoose.model('personalCustomerTransectionRecord', personalCustomerTransectionRecordSchema);
+module.exports = personalCustomerTransectionRecord;
