@@ -311,12 +311,12 @@ const handleToEditDriverCommisionEntryByAdmin = asyncHandler(async (req, res) =>
       });
     }
 
-    const { entryId, driverCommisionAmount, partyAmount, status, entryDate, driverId } = req.body;
-    if (!entryId || !driverId) {
-      return res.status(400).json({ message: "entryId and driverId are required" });
+    const { entryId, driverCommisionAmount, partyAmount, status, entryDate, driverId, description } = req.body;
+    if (!entryId) {
+      return res.status(400).json({ message: "entryId is required" });
     }
 
-    const commissionEntryDetails = await DriverCommisionEntry.findOne({ entryId, driverId });
+    const commissionEntryDetails = await DriverCommisionEntry.findOne({ entryId });
     if (!commissionEntryDetails) {
       return res.status(404).json({ message: "Driver commission entry not found" });
     }
