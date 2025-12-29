@@ -115,72 +115,75 @@ const handleToGetStaffListByAdmin = asyncHandler(async (req, res) => {
 
 
 const handleToUpdateStaffByAdmin = asyncHandler(async (req, res) => {
-    try {
-        const decodedToken = req.user;
-        if (!decodedToken || decodedToken.role !== 'admin') {
-            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
-        }
-        const payload = req.body;
-        if (!payload || Object.keys(payload).length === 0) {
-            return res.status(400).json({ message: "Bad Request: Missing or empty request body" });
-        }
-        if (!payload.staffId) {
-            return res.status(400).json({ message: "Bad Request: Missing required fields" });
-        }
-        const existingStaffUser = await Staff.findOne({ staffId: payload.staffId });
-        if (!existingStaffUser) {
-            return res.status(404).json({ message: "Staff user not found" });
-        }
-        const baseUrl = `${req.protocol}://${req.get("host")}`;
-
-        let profileImageUrl = existingStaffUser.profileImage;
-        let idProofImageUrl = existingStaffUser.IdProofImage;
-
-        if (req.files?.profileImage?.length > 0) {
-            profileImageUrl = `${baseUrl}/uploads/paymentScreenshots/${req.files.profileImage[0].filename}`;
-        }
-
-        if (req.files?.IdProofImage?.length > 0) {
-            idProofImageUrl = `${baseUrl}/uploads/paymentScreenshots/${req.files.IdProofImage[0].filename}`;
-        }
-
-        if (existingStaffUser) {
-            const updatedStaff = await Staff.findOneAndUpdate(
-                { staffId: payload.staffId },
-                {
-                    $set: {
-                        firstName: payload.firstName || existingStaffUser.firstName,
-                        lastName: payload.lastName || existingStaffUser.lastName,
-                        email: payload.email || existingStaffUser.email,
-                        mobile: payload.mobile || existingStaffUser.mobile,
-                        age: payload.age || existingStaffUser.age,
-                        role: payload.role || existingStaffUser.role,
-                        gender: payload.gender || existingStaffUser.gender,
-                        branchName:payload.branchName || existingStaffUser.branchName,
-                        salary:payload.salary || existingStaffUser.salary,
-                        address: {
-                            city: payload.address?.city || existingStaffUser.address.city,
-                            state: payload.address?.state || existingStaffUser.address.state,
-                            country: payload.address?.country || existingStaffUser.address.country
-                        },
-                        DOB: payload.DOB || existingStaffUser.DOB,
-                        IdProofImage: idProofImageUrl,
-                        profileImage: profileImageUrl,
-                        adharNumber: payload.adharNumber || existingStaffUser.adharNumber,
-                        updatedAt: new Date()
-                    }
-                },
-                { new: true }
-            );
-            return res.status(200).json({ message: "Staff user updated successfully", updatedStaff: updatedStaff });
-        }
-    }
-    catch (err) {
-        console.error("Error in fetching Staff list:", err);
-        res.status(500).json({ message: "Internal Server Error" });
+  try {
+    const decodedToken = req.user;
+    if (!decodedToken || decodedToken.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden: Unauthorized access" });
     }
 
-})
+    const payload = req.body;
+
+    if (!payload.staffId) {
+      return res.status(400).json({ message: "staffId is required" });
+    }
+
+    const existingStaffUser = await Staff.findOne({ staffId: payload.staffId });
+    if (!existingStaffUser) {
+      return res.status(404).json({ message: "Staff user not found" });
+    }
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    let profileImageUrl = existingStaffUser.profileImage;
+    let idProofImageUrl = existingStaffUser.IdProofImage;
+
+    if (req.files?.profileImage?.length > 0) {
+      profileImageUrl = `${baseUrl}/uploads/staff/${req.files.profileImage[0].filename}`;
+    }
+
+    if (req.files?.IdProofImage?.length > 0) {
+      idProofImageUrl = `${baseUrl}/uploads/staff/${req.files.IdProofImage[0].filename}`;
+    }
+
+    const updatedStaff = await Staff.findOneAndUpdate(
+      { staffId: payload.staffId },
+      {
+        $set: {
+          firstName: payload.firstName ?? existingStaffUser.firstName,
+          lastName: payload.lastName ?? existingStaffUser.lastName,
+          email: payload.email ?? existingStaffUser.email,
+          mobile: payload.mobile ?? existingStaffUser.mobile,
+          age: payload.age ?? existingStaffUser.age,
+          role: payload.role ?? existingStaffUser.role,
+          gender: payload.gender ?? existingStaffUser.gender,
+          branchName: payload.branchName ?? existingStaffUser.branchName,
+          salary: payload.salary ?? existingStaffUser.salary,
+          DOB: payload.DOB ?? existingStaffUser.DOB,
+          adharNumber: payload.adharNumber ?? existingStaffUser.adharNumber,
+          profileImage: profileImageUrl,
+          IdProofImage: idProofImageUrl,
+          address: {
+            city: payload.address?.city ?? existingStaffUser.address?.city,
+            state: payload.address?.state ?? existingStaffUser.address?.state,
+            country: payload.address?.country ?? existingStaffUser.address?.country,
+            pincode: payload.address?.pincode ?? existingStaffUser.address?.pincode,
+            street: payload.address?.street ?? existingStaffUser.address?.street,
+          },
+        },
+      },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: "Staff user updated successfully",
+      updatedStaff,
+    });
+  } catch (err) {
+    console.error("Error updating staff:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 
 const handleToDeleteTheStaffByAdmin = asyncHandler(async (req, res) => {
     try {
