@@ -22,8 +22,15 @@ router.post(
 
 router.get("/get-list", verifyToken, handleToGetStaffListByAdmin);
 
-router.patch("/update-profile", verifyToken, handleToUpdateStaffByAdmin);
-router.delete("/delete-staff", verifyToken, handleToDeleteTheStaffByAdmin);
+router.patch(
+    "/update-profile",
+    verifyToken,
+    upload.fields([
+        { name: "profileImage", maxCount: 1 },
+        { name: "IdProofImage", maxCount: 1 }
+    ]),
+    handleToUpdateStaffByAdmin
+); router.delete("/delete-staff", verifyToken, handleToDeleteTheStaffByAdmin);
 
 
 
