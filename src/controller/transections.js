@@ -104,21 +104,6 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
 
         const payload = req.body;
 
-        if (!payload.transectionUserId) {
-            return res.status(400).json({
-                message: "Invalid Payload: transectionUserId is required"
-            });
-        }
-
-        if (
-            (payload.givenToAdmin && !payload.givenToAdmin.hotelBranchName) ||
-            (payload.takenFromAdmin && !payload.takenFromAdmin.hotelBranchName)
-        ) {
-            return res.status(400).json({
-                message: "hotelBranchName is required for each transaction"
-            });
-        }
-
         if (payload.givenToAdmin && typeof payload.givenToAdmin === "string") {
             payload.givenToAdmin = JSON.parse(payload.givenToAdmin);
         }
@@ -127,6 +112,29 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             payload.takenFromAdmin = JSON.parse(payload.takenFromAdmin);
         }
 
+        if (!payload.transectionUserId) {
+            return res.status(400).json({
+                message: "Invalid Payload: transectionUserId is required"
+            });
+        }
+
+        if (!payload.givenToAdmin && !payload.takenFromAdmin) {
+            return res.status(400).json({
+                message: "Either givenToAdmin or takenFromAdmin is required"
+            });
+        }
+
+        if (payload.givenToAdmin && !payload.givenToAdmin.hotelBranchName) {
+            return res.status(400).json({
+                message: "hotelBranchName is required in givenToAdmin"
+            });
+        }
+
+        if (payload.takenFromAdmin && !payload.takenFromAdmin.hotelBranchName) {
+            return res.status(400).json({
+                message: "hotelBranchName is required in takenFromAdmin"
+            });
+        }
         let screenshotUrl = null;
         if (req.file) {
             screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
