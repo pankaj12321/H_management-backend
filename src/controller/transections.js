@@ -12,7 +12,7 @@ const { Expense } = require('../models/expense_earning')
 const Supplier = require('../models/supplier')
 const SupplierTransactionRecord = require('../models/supplier-transection-record')
 const { personalCustomerRecordTran } = require('../models/personalCustomerUser')
-const personalCustomerTransectionRecord = require('../models/personalCustomerTransectionRecord')
+const personalCustomerEntries = require('../models/personalCustomerTransectionRecord')
 const getISTTime = () => {
     return new Date(Date.now() + (5.5 * 60 * 60 * 1000));  // UTC → IST
 };
@@ -1050,9 +1050,9 @@ const handleToCreatePersonalTransectionCustomer = asyncHandler(async (req, res) 
 
         await newPersonalTransectionUser.save();
 
-        return res.status(201).json({ message: "Personal transection user created successfully", data: newPersonalTransectionUser });
+        return res.status(201).json({ message: "Personal customer user created successfully", data: newPersonalTransectionUser });
     } catch (err) {
-        console.error("Error in creating personal transection user:", err);
+        console.error("Error in creating personal customer user:", err);
         return res.status(500).json({ message: "Internal Server Error" });
     }
 });
@@ -1080,55 +1080,41 @@ const handleToGetPersonalCustomerListByAdmin = asyncHandler(async (req, res) => 
 
         if (countDocuments === 0) {
             return res.status(404).json({
-                message: "No personal transaction records found for the given criteria"
+                message: "No personal customer records found for the given criteria"
             });
         }
 
         return res.status(200).json({
-            message: "Personal transaction record fetched successfully",
+            message: "Personal customer record fetched successfully",
             data: personalTransectionRecord,
             count: countDocuments
         });
 
     } catch (err) {
-        console.error("Error in fetching personal transaction record:", err);
+        console.error("Error in fetching personal customer record:", err);
         return res.status(500).json({ message: "Internal Server Error" });
     }
 });
 
-
-
-
-const handleToMakeTransectionBetweenAdminAndPersonalCustomer = asyncHandler(async (req, res) => {
+const handleToCreatePersonalCustomerEntry = asyncHandler(async (req, res) => {
     try {
         const decodedToken = req.user;
 
-        if (!decodedToken || decodedToken.role !== "admin") {
-            return res.status(403).json({
-                message: "Forbidden: invalid token/Unauthorized access"
-            });
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
         }
 
         const payload = req.body;
 
-        if (!payload.personalCustomerRecordTranId) {
+        if (!payload.personalCustomerRecordTranId || !payload.billAmount || !payload.amountPaidAfterDiscount || !payload.paymentMode || !payload.paymentScreenshoot || !payload.description || !payload.status) {
             return res.status(400).json({
-                message: "Invalid Payload: personalCustomerRecordTranId is required"
+                message: "Invalid Payload: 'personalCustomerRecordTranId', 'billAmount', 'amountPaidAfterDiscount', 'paymentMode', 'paymentScreenshoot', 'description' and 'status' are required"
             });
         }
 
-        if (!payload.givenToAdmin && !payload.takenFromAdmin) {
-            return res.status(400).json({
-                message: "Either givenToAdmin or takenFromAdmin must be provided"
-            });
-        }
-
-        if (payload.givenToAdmin && typeof payload.givenToAdmin === "string") {
-            payload.givenToAdmin = JSON.parse(payload.givenToAdmin);
-        }
-
-        if (payload.takenFromAdmin && typeof payload.takenFromAdmin === "string") {
-            payload.takenFromAdmin = JSON.parse(payload.takenFromAdmin);
+        const existingUser = await personalCustomerRecordTran.findOne({ personalCustomerRecordTranId: payload.personalCustomerRecordTranId });
+        if (!existingUser) {
+            return res.status(404).json({ message: "Personal customer record not found" });
         }
 
         let screenshotUrl = null;
@@ -1136,243 +1122,108 @@ const handleToMakeTransectionBetweenAdminAndPersonalCustomer = asyncHandler(asyn
             screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
         }
 
-        const userExists = await personalCustomerRecordTran.findOne({
-            personalCustomerRecordTranId: payload.personalCustomerRecordTranId
+        const personalCustomerEntryId = entityIdGenerator("PCE");
+        const newPersonalTransectionUser = new personalCustomerEntries({
+            personalCustomerRecordTranId: payload.personalCustomerRecordTranId,
+            personalCustomerEntryId: personalCustomerEntryId,
+            billAmount: payload.billAmount,
+            amountPaidAfterDiscount: payload.amountPaidAfterDiscount,
+            paymentMode: payload.paymentMode,
+            paymentScreenshoot: screenshotUrl,
+            description: payload.description,
+            status: payload.status,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
         });
 
-        if (!userExists) {
+        await newPersonalTransectionUser.save();
+
+        return res.status(201).json({ message: "Personal customer entry created successfully", data: newPersonalTransectionUser });
+    } catch (err) {
+        console.error("Error in creating personal customer entry:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+const handleToGetPersonalCustomerEntryByAdmin = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+
+        const query = req.query;
+        let matchQuery = {};
+
+        if (query.personalCustomerRecordTranId) {
+            matchQuery.personalCustomerRecordTranId = query.personalCustomerRecordTranId;
+        }
+
+        const personalCustomerEntry =
+            await personalCustomerEntries.find(matchQuery);
+
+        const countDocuments =
+            await personalCustomerEntries.countDocuments(matchQuery);
+
+        if (countDocuments === 0) {
             return res.status(404).json({
-                message: "Transaction Customer not found"
+                message: "No personal customer entries found for the given criteria"
             });
         }
-
-        let record = await personalCustomerTransectionRecord.findOne({
-            personalCustomerRecordTranId: payload.personalCustomerRecordTranId
-        });
-
-        if (!record) {
-            record = new personalCustomerTransectionRecord({
-                personalCustomerRecordTranId: payload.personalCustomerRecordTranId,
-            });
-        }
-
-        // ✅ GIVEN TO ADMIN
-        if (payload.givenToAdmin) {
-            const amount = Number(payload.givenToAdmin.Rs);
-
-            if (isNaN(amount)) {
-                return res.status(400).json({ message: "Invalid amount in givenToAdmin" });
-            }
-
-            record.givenToAdmin.push({
-                Rs: amount,
-                paymentMode: payload.givenToAdmin.paymentMode,
-                description: payload.givenToAdmin.description,
-                paymentScreenshoot: screenshotUrl,
-                billno: payload.givenToAdmin.billno,
-                returnDate: payload.givenToAdmin.returnDate,
-                updatedAt: new Date()
-            });
-        }
-
-        // ✅ TAKEN FROM ADMIN
-        if (payload.takenFromAdmin) {
-            const amount = Number(payload.takenFromAdmin.Rs);
-
-            if (isNaN(amount)) {
-                return res.status(400).json({ message: "Invalid amount in takenFromAdmin" });
-            }
-
-            record.takenFromAdmin.push({
-                Rs: amount,
-                paymentMode: payload.takenFromAdmin.paymentMode,
-                description: payload.takenFromAdmin.description,
-                paymentScreenshoot: screenshotUrl,
-                billno: payload.takenFromAdmin.billno,
-                returnDate: payload.takenFromAdmin.returnDate,
-                updatedAt: new Date()
-            });
-        }
-
-        // ✅ RECOMPUTE TOTALS
-        record.totalGiven = record.givenToAdmin.reduce(
-            (sum, item) => sum + Number(item.Rs),
-            0
-        );
-
-        record.totalTaken = record.takenFromAdmin.reduce(
-            (sum, item) => sum + Number(item.Rs),
-            0
-        );
-
-        await record.save();
 
         return res.status(200).json({
-            message: "Transaction recorded successfully",
-            data: record
+            message: "Personal customer entry fetched successfully",
+            data: personalCustomerEntry,
+            count: countDocuments
         });
 
     } catch (err) {
-        console.error("Error in recording transaction:", err);
-        return res.status(500).json({
-            message: "Internal Server Error"
-        });
+        console.error("Error in fetching personal customer entry:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
     }
 });
 
-const handleToGetPersonalCustomerTransectionRecordByAdmin = asyncHandler(async (req, res) => {
+const handleToUpdatePersonalCustomerEntry = asyncHandler(async (req, res) => {
     try {
         const decodedToken = req.user;
-        if (!decodedToken || decodedToken.role !== 'admin') {
-            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
-        }
-        const queryParams = req.query;
-        const matchQuery = {};
 
-        if (queryParams.personalCustomerRecordTranId) {
-            matchQuery.personalCustomerRecordTranId = queryParams.personalCustomerRecordTranId;
-        }
-
-        const transectionUsers = await personalCustomerTransectionRecord.find(matchQuery).sort({ createdAt: -1 });
-
-        return res.status(200).json({ message: "Transection Users fetched successfully", data: transectionUsers });
-    } catch (err) {
-        console.error("Error in fetching Transection Users:", err);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-});
-
-const handleTodeleteTheCustomerTransectionEntry = asyncHandler(async (req, res) => {
-    try {
-        const decodedToken = req.user;
-        if (!decodedToken || decodedToken.role !== 'admin') {
-            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
-        }
-        const payload = req.body;
-
-        if (!payload.personalCustomerRecordTranId || !payload._id) {
-            return res.status(400).json({
-                message: "Invalid Payload: personalCustomerRecordTranId and _id are required"
-            });
-        }
-
-        const record = await personalCustomerTransectionRecord.findOne({
-            personalCustomerRecordTranId: payload.personalCustomerRecordTranId
-        });
-
-        if (!record) {
-            return res.status(404).json({ message: "Transaction Record not found" });
-        }
-
-        // Check if the transaction exists in givenToAdmin
-        const givenIndex = record.givenToAdmin.findIndex(
-            (item) => item._id.toString() === payload._id
-        );
-
-        if (givenIndex !== -1) {
-            record.givenToAdmin.splice(givenIndex, 1);
-        } else {
-            // Check if the transaction exists in takenFromAdmin
-            const takenIndex = record.takenFromAdmin.findIndex(
-                (item) => item._id.toString() === payload._id
-            );
-
-            if (takenIndex !== -1) {
-                record.takenFromAdmin.splice(takenIndex, 1);
-            } else {
-                return res.status(404).json({ message: "Transaction Entry not found with this ID" });
-            }
-        }
-
-        record.totalGiven = record.givenToAdmin.reduce((sum, item) => sum + item.Rs, 0);
-        record.totalTaken = record.takenFromAdmin.reduce((sum, item) => sum + item.Rs, 0);
-
-        await record.save();
-
-        return res.status(200).json({
-            message: "Transaction Entry deleted successfully",
-            data: record
-        });
-    } catch (err) {
-        console.error("Error in deleting Transection Entry:", err);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-});
-const handleToUpdateTheCustomerTransectionEntry = asyncHandler(async (req, res) => {
-    try {
-        const decodedToken = req.user;
         if (!decodedToken || decodedToken.role !== 'admin') {
             return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
         }
 
         const payload = req.body;
 
-        if (!payload.personalCustomerRecordTranId || !payload._id) {
+        if (!payload.personalCustomerEntryId) {
             return res.status(400).json({
-                message: "Invalid Payload: personalCustomerRecordTranId and _id are required"
+                message: "Invalid Payload: 'personalCustomerEntryId' is required"
             });
         }
 
-        const record = await personalCustomerTransectionRecord.findOne({
-            personalCustomerRecordTranId: payload.personalCustomerRecordTranId
+        const existingEntry = await personalCustomerEntries.findOne({
+            personalCustomerEntryId: payload.personalCustomerEntryId
         });
 
-        if (!record) {
-            return res.status(404).json({ message: "Transaction Record not found" });
+        if (!existingEntry) {
+            return res.status(404).json({
+                message: "Personal customer entry not found"
+            });
         }
 
-        let screenshotUrl = null;
-        if (req.file) {
-            screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
-        }
-
-        let entryFound = false;
-
-        // Helper to update fields
-        const updateFields = (item) => {
-            if (payload.Rs) item.Rs = Number(payload.Rs);
-            if (payload.paymentMode) item.paymentMode = payload.paymentMode;
-            if (payload.description) item.description = payload.description;
-            if (payload.billno) item.billno = payload.billno;
-            if (payload.returnDate) item.returnDate = payload.returnDate;
-            if (screenshotUrl) item.paymentScreenshoot = screenshotUrl;
-            item.updatedAt = new Date();
-        };
-
-        // Search in givenToAdmin
-        const givenItem = record.givenToAdmin.id(payload._id);
-        if (givenItem) {
-            updateFields(givenItem);
-            entryFound = true;
-        } else {
-            // Search in takenFromAdmin
-            const takenItem = record.takenFromAdmin.id(payload._id);
-            if (takenItem) {
-                updateFields(takenItem);
-                entryFound = true;
-            }
-        }
-
-        if (!entryFound) {
-            return res.status(404).json({ message: "Transaction Entry not found with this ID" });
-        }
-
-        // Recalculate totals
-        record.totalGiven = record.givenToAdmin.reduce((sum, item) => sum + item.Rs, 0);
-        record.totalTaken = record.takenFromAdmin.reduce((sum, item) => sum + item.Rs, 0);
-
-        await record.save();
+        const updatePersonalCustomerEntry = await personalCustomerEntries.findOneAndUpdate({
+            personalCustomerEntryId: payload.personalCustomerEntryId
+        }, payload, { new: true });
 
         return res.status(200).json({
-            message: "Transaction Entry updated successfully",
-            data: record
+            message: "Personal customer entry updated successfully",
+            data: updatePersonalCustomerEntry
         });
-
     } catch (err) {
-        console.error("Error in updating Transection Entry:", err);
-        res.status(500).json({ message: "Internal Server Error" });
+        console.error("Error in updating personal customer entry:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
     }
 });
+
 
 module.exports = {
     handleToCreateTransectionUser,
@@ -1387,15 +1238,14 @@ module.exports = {
     handleToAddSupplierTransaction,
     handleToGetSupplierTransactionByOneByOne,
     handleToCalculateTotalTakenAndGivenMoney,
-
+    handleToCreatePersonalCustomerEntry,
     handleToAddPersonalTransectionalUser,
     handleToGetPersonalUserByAdmin,
     handleToMakeTransectionBetweenAdminAndPersonalUser,
     handleToGetPersonalTransectionUserRecordByAdmin,
     handleToCreatePersonalTransectionCustomer,
     handleToGetPersonalCustomerListByAdmin,
-    handleToMakeTransectionBetweenAdminAndPersonalCustomer,
-    handleToGetPersonalCustomerTransectionRecordByAdmin,
-    handleTodeleteTheCustomerTransectionEntry,
-    handleToUpdateTheCustomerTransectionEntry
+    handleToGetPersonalCustomerEntryByAdmin,
+    handleToUpdatePersonalCustomerEntry,
+
 };

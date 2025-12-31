@@ -20,12 +20,11 @@ const {
     handleToGetPersonalUserByAdmin,
     handleToMakeTransectionBetweenAdminAndPersonalUser,
     handleToGetPersonalTransectionUserRecordByAdmin,
-    handleToMakeTransectionBetweenAdminAndPersonalCustomer,
     handleToCreatePersonalTransectionCustomer,
     handleToGetPersonalCustomerListByAdmin,
-    handleToGetPersonalCustomerTransectionRecordByAdmin,
-    handleTodeleteTheCustomerTransectionEntry,
-    handleToUpdateTheCustomerTransectionEntry
+    handleToCreatePersonalCustomerEntry,
+    handleToGetPersonalCustomerEntryByAdmin,
+    handleToUpdatePersonalCustomerEntry
 } = require('../controller/transections');
 
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
@@ -70,11 +69,9 @@ router.get('/get/personal/transectional/record', verifyToken, handleToGetPersona
 router.post('/add/personal/customer', verifyToken, handleToCreatePersonalTransectionCustomer)
 
 router.get('/get/personal/customer/users', verifyToken, handleToGetPersonalCustomerListByAdmin)
-
-router.post('/add/personal/customer/transection', verifyToken, upload.single("paymentScreenshoot"), handleToMakeTransectionBetweenAdminAndPersonalCustomer)
-router.get('/get/personal/customer/transection', verifyToken, handleToGetPersonalCustomerTransectionRecordByAdmin)
-router.delete('/delete/personal/customer/transection/entry', verifyToken, handleTodeleteTheCustomerTransectionEntry)
-router.patch('/update/personal/customer/transection/entry', verifyToken, upload.single("paymentScreenshoot"), handleToUpdateTheCustomerTransectionEntry)
+router.post('/add/personal/customer/entry', verifyToken, upload.single("paymentScreenshoot"), handleToCreatePersonalCustomerEntry)
+router.get('/get/personal/customer/entry', verifyToken, handleToGetPersonalCustomerEntryByAdmin)
+router.patch('/update/personal/customer/entry', verifyToken, upload.single("paymentScreenshoot"), handleToUpdatePersonalCustomerEntry)
 
 const transectionRecordRouter = router
 module.exports = transectionRecordRouter;

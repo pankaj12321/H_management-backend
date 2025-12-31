@@ -24,6 +24,7 @@ const expenseSchema = new mongoose.Schema({
     },
     paymentMode: {
         type: String,
+        enum: ["cash", "online", "cheque"],
         default: "cash"
     },
     billno: {
@@ -48,7 +49,7 @@ const earningSchema = new mongoose.Schema({
     },
     hotelBranchName: {
         type: String,
-        required: true, 
+        required: true,
         index: true
     },
     earningAmount: {

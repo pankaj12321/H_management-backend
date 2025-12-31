@@ -4,7 +4,7 @@ const transactionItemSchema = new mongoose.Schema({
     Rs: { type: Number },
     paymentMode: {
         type: String,
-        enum: ["cash", "online"],
+        enum: ["cash", "online", "cheque"],
     },
     description: {
         type: String

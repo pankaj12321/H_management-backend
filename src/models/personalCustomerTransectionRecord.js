@@ -1,54 +1,41 @@
 const mongoose = require("mongoose");
 
-const personalTransectionRecordSchema = new mongoose.Schema({
-    Rs: { type: Number },
+const personalCustomerEntriesSchema = new mongoose.Schema({
+    personalCustomerRecordTranId: {
+        type: String
+    },
+    personalCustomerEntryId: {
+        type: String
+    },
+    billAmount: {
+        type: Number
+    },
+    amountPaidAfterDiscount: {
+        type: Number
+    },
     paymentMode: {
         type: String,
-        enum: ["cash", "online"],
-    },
-    description: {
-        type: String
+        enum: ["cash", "online", "cheque"]
     },
     paymentScreenshoot: {
         type: String
     },
-    billno: {
-        type: Number
+    description: {
+        type: String
     },
-    returnDate: {
-        type: Date
+    status: {
+        type: String
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
     },
     updatedAt: {
         type: Date,
-        default: Date.now,
+        default: Date.now
     }
+
 });
 
-const personalCustomerTransectionRecordSchema = mongoose.Schema({
-    personalCustomerRecordTranId: {
-        type: String,
-    },
-
-    givenToAdmin: {
-        type: [personalTransectionRecordSchema],
-        default: [],
-    },
-
-    takenFromAdmin: {
-        type: [personalTransectionRecordSchema],
-        default: [],
-    },
-
-    totalTaken: {
-        type: Number,
-        default: 0,
-    },
-
-    totalGiven: {
-        type: Number,
-        default: 0,
-    },
-}, { timestamps: true });
-
-const personalCustomerTransectionRecord = mongoose.model('personalCustomerTransectionRecord', personalCustomerTransectionRecordSchema);
-module.exports = personalCustomerTransectionRecord;
+const personalCustomerEntries = mongoose.model('personalCustomerEntries', personalCustomerEntriesSchema);
+module.exports = personalCustomerEntries;

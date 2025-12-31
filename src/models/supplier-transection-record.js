@@ -4,7 +4,7 @@ const supplierTxnItemSchema = new mongoose.Schema({
     Rs: { type: Number },
     paymentMode: {
         type: String,
-        enum: ["cash", "online"],
+        enum: ["cash", "online", "cheque"],
     },
     returnDate: {
         type: Date

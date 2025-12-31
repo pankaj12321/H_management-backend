@@ -24,8 +24,8 @@ const supplierSchema = new mongoose.Schema({
         default: Date.now,
     },
 },
-{ timestamps: true }
+    { timestamps: true }
 );
 
-const Supplier= mongoose.model('Supplier', supplierSchema);
+const Supplier = mongoose.model('Supplier', supplierSchema);
 module.exports = Supplier;
