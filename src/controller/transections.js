@@ -1224,6 +1224,44 @@ const handleToUpdatePersonalCustomerEntry = asyncHandler(async (req, res) => {
     }
 });
 
+const handleToDeletePersonalCustomerEntry = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+
+        const payload = req.body;
+        if (!payload.personalCustomerEntryId) {
+            return res.status(400).json({
+                message: "Invalid Payload: 'personalCustomerEntryId' is required"
+            });
+        }
+
+        const existingEntry = await personalCustomerEntries.findOne({
+            personalCustomerEntryId: payload.personalCustomerEntryId
+        });
+
+        if (!existingEntry) {
+            return res.status(404).json({
+                message: "Personal customer entry not found"
+            });
+        }
+
+        await personalCustomerEntries.deleteOne({
+            personalCustomerEntryId: payload.personalCustomerEntryId
+        });
+
+        return res.status(200).json({
+            message: "Personal customer entry deleted successfully",
+            data: existingEntry
+        });
+    } catch (err) {
+        console.error("Error in deleting personal customer entry:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+});
 
 module.exports = {
     handleToCreateTransectionUser,
@@ -1247,5 +1285,6 @@ module.exports = {
     handleToGetPersonalCustomerListByAdmin,
     handleToGetPersonalCustomerEntryByAdmin,
     handleToUpdatePersonalCustomerEntry,
+    handleToDeletePersonalCustomerEntry
 
 };
