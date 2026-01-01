@@ -25,7 +25,8 @@ const {
     handleToCreatePersonalCustomerEntry,
     handleToGetPersonalCustomerEntryByAdmin,
     handleToUpdatePersonalCustomerEntry,
-    handleToDeletePersonalCustomerEntry
+    handleToDeletePersonalCustomerEntry,
+    handleToUpdateThPersonalCustomerProfile
 } = require('../controller/transections');
 
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
@@ -70,6 +71,7 @@ router.get('/get/personal/transectional/record', verifyToken, handleToGetPersona
 router.post('/add/personal/customer', verifyToken, handleToCreatePersonalTransectionCustomer)
 
 router.get('/get/personal/customer/users', verifyToken, handleToGetPersonalCustomerListByAdmin)
+router.patch('/update/personal/customer/profile', verifyToken, handleToUpdateThPersonalCustomerProfile)
 router.post('/add/personal/customer/entry', verifyToken, upload.single("paymentScreenshoot"), handleToCreatePersonalCustomerEntry)
 router.get('/get/personal/customer/entry', verifyToken, handleToGetPersonalCustomerEntryByAdmin)
 router.patch('/update/personal/customer/entry', verifyToken, upload.single("paymentScreenshoot"), handleToUpdatePersonalCustomerEntry)

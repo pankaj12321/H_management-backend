@@ -1095,6 +1095,40 @@ const handleToGetPersonalCustomerListByAdmin = asyncHandler(async (req, res) => 
         return res.status(500).json({ message: "Internal Server Error" });
     }
 });
+const handleToUpdateThPersonalCustomerProfile = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+
+        const payload = req.body;
+
+        if (!payload.personalCustomerRecordTranId) {
+            return res.status(400).json({
+                message: "Invalid Payload: 'personalCustomerRecordTranId' is required"
+            });
+        }
+
+        const existingUser = await personalCustomerRecordTran.findOne({ personalCustomerRecordTranId: payload.personalCustomerRecordTranId });
+        if (!existingUser) {
+            return res.status(404).json({ message: "Personal customer record not found" });
+        }
+
+        existingUser.name = payload.name;
+        existingUser.mobile = payload.mobile;
+        existingUser.city = payload.city;
+        existingUser.state = payload.state;
+
+        await existingUser.save();
+
+        return res.status(200).json({ message: "Personal customer profile updated successfully", data: existingUser });
+    } catch (err) {
+        console.error("Error in updating personal customer profile:", err);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+});
 
 const handleToCreatePersonalCustomerEntry = asyncHandler(async (req, res) => {
     try {
@@ -1111,6 +1145,8 @@ const handleToCreatePersonalCustomerEntry = asyncHandler(async (req, res) => {
                 message: "Invalid Payload: 'personalCustomerRecordTranId', 'billAmount', 'amountPaidAfterDiscount', 'paymentMode', 'paymentScreenshoot', 'description' and 'status' are required"
             });
         }
+
+
 
         const existingUser = await personalCustomerRecordTran.findOne({ personalCustomerRecordTranId: payload.personalCustomerRecordTranId });
         if (!existingUser) {
@@ -1129,6 +1165,7 @@ const handleToCreatePersonalCustomerEntry = asyncHandler(async (req, res) => {
             billAmount: payload.billAmount,
             amountPaidAfterDiscount: payload.amountPaidAfterDiscount,
             paymentMode: payload.paymentMode,
+            hotelBranchName: decodedToken.branch,
             paymentScreenshoot: screenshotUrl,
             description: payload.description,
             status: payload.status,
@@ -1285,6 +1322,7 @@ module.exports = {
     handleToGetPersonalCustomerListByAdmin,
     handleToGetPersonalCustomerEntryByAdmin,
     handleToUpdatePersonalCustomerEntry,
-    handleToDeletePersonalCustomerEntry
+    handleToDeletePersonalCustomerEntry,
+    handleToUpdateThPersonalCustomerProfile
 
 };

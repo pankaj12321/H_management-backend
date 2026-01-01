@@ -23,6 +23,9 @@ const personalCustomerEntriesSchema = new mongoose.Schema({
     description: {
         type: String
     },
+    hotelBranchName: {
+        type: String
+    },
     status: {
         type: String
     },
