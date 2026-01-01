@@ -10,11 +10,13 @@ const {
     handleToAddTheHotelExpense,
     handleToAddTheHotelEarning,
     handleToGetEarningandExpenseReport,
+    handleToDeleteEarningOrExpenseEntriesByAdmin,
     handleToGetTransectionUserRecordByAdmin,
     handleToAddTheHotelSupplierPerson,
     handleToGetTheHotelSupplierPerson,
     handleToAddSupplierTransaction,
     handleToGetSupplierTransactionByOneByOne,
+    handleToDeleteTheEntriesOfSupplierTransection,
     handleToCalculateTotalTakenAndGivenMoney,
     handleToAddPersonalTransectionalUser,
     handleToGetPersonalUserByAdmin,
@@ -26,13 +28,18 @@ const {
     handleToGetPersonalCustomerEntryByAdmin,
     handleToUpdatePersonalCustomerEntry,
     handleToDeletePersonalCustomerEntry,
-    handleToUpdateThPersonalCustomerProfile
+    handleToUpdateThPersonalCustomerProfile,
+    handleToDeleteTheEntreisOfTransectionalUser
 } = require('../controller/transections');
 
+
+
+// routes for transection user for expenses and earnings me h ye transectional user
 router.post("/create-transection-user", verifyToken, handleToCreateTransectionUser);
 router.get("/get/transection-user", verifyToken, handleToGetTransectionUserListByAdmin);
 router.post("/make-transection", verifyToken, upload.single("paymentScreenshoot"), handleToMakeTransectionBetweenAdminAndUser);
 router.get("/get/transection-record", verifyToken, handleToGetTransectionUserRecordByAdmin);
+router.delete("/delete/transection-user-entry", verifyToken, handleToDeleteTheEntreisOfTransectionalUser);
 
 // routes for hotel expences and earning
 router.post(
@@ -46,6 +53,7 @@ router.post('/add/hotel-earning', verifyToken,
     handleToAddTheHotelEarning)
 
 router.get('/get/earning-expense-report', verifyToken, handleToGetEarningandExpenseReport)
+router.delete('/delete/earning-expense-entry', verifyToken, handleToDeleteEarningOrExpenseEntriesByAdmin)
 
 // routes for the hotel supplier and their activity routes
 
@@ -56,6 +64,7 @@ router.get('/get/supplier-persons', verifyToken, handleToGetTheHotelSupplierPers
 router.post('/make-supplier-transection', verifyToken, upload.single("paymentScreenshoot"),
     handleToAddSupplierTransaction)
 router.get('/get/supplier-transection', verifyToken, handleToGetSupplierTransactionByOneByOne)
+router.delete('/delete/supplier-transection-entry', verifyToken, handleToDeleteTheEntriesOfSupplierTransection)
 
 router.get('/get/total-taken-amount', handleToCalculateTotalTakenAndGivenMoney)
 

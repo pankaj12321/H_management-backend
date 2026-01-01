@@ -309,6 +309,73 @@ const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) =>
     }
 });
 
+const handleToDeleteTheEntreisOfTransectionalUser = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== "admin") {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access",
+            });
+        }
+
+        const { transectionUserId, type, objId } = req.body;
+
+        if (!transectionUserId || !type || !objId) {
+            return res.status(400).json({
+                message: "transectionUserId, type and objId are required",
+            });
+        }
+
+        if (!["givenToAdmin", "takenFromAdmin"].includes(type)) {
+            return res.status(400).json({
+                message: "type must be either givenToAdmin or takenFromAdmin",
+            });
+        }
+
+        const record = await TransectionUserRecord.findOne({ transectionUserId });
+
+        if (!record) {
+            return res.status(404).json({
+                message: "Transection record not found",
+            });
+        }
+
+        const entry = record[type].find(
+            (item) => item._id.toString() === objId
+        );
+
+        if (!entry) {
+            return res.status(404).json({
+                message: "Entry not found in selected transaction type",
+            });
+        }
+
+        if (type === "givenToAdmin") {
+            record.totalGiven -= entry.Rs;
+        } else {
+            record.totalTaken -= entry.Rs;
+        }
+
+        record[type] = record[type].filter(
+            (item) => item._id.toString() !== objId
+        );
+
+        await record.save();
+
+        return res.status(200).json({
+            message: "Transaction entry deleted successfully",
+            data: record,
+        });
+    } catch (err) {
+        console.error("Error deleting transaction entry:", err);
+        return res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
+});
+
+
 const handleToCalculateTotalTakenAndGivenMoney = async (req, res) => {
     try {
         // const decodedToken= req.user;
@@ -493,6 +560,56 @@ const handleToGetEarningandExpenseReport = asyncHandler(async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+// handle to delete the entries of earning and expense
+
+const handleToDeleteEarningOrExpenseEntriesByAdmin = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+        if (!decodedToken || decodedToken.role !== "admin") {
+            return res.status(403).json({
+                message: "Forbidden: Only admin can perform this action",
+            });
+        }
+
+        const { type, objId } = req.body;
+
+        if (!type || !objId) {
+            return res.status(400).json({
+                message: "type and objId are required",
+            });
+        }
+
+        if (!["earnings", "expenses"].includes(type)) {
+            return res.status(400).json({
+                message: "type must be either earnings or expenses",
+            });
+        }
+
+        let deletedDoc;
+
+        if (type === "earnings") {
+            deletedDoc = await Earning.findByIdAndDelete(objId);
+        } else {
+            deletedDoc = await Expense.findByIdAndDelete(objId);
+        }
+
+        if (!deletedDoc) {
+            return res.status(404).json({
+                message: `${type} entry not found`,
+            });
+        }
+
+        return res.status(200).json({
+            message: `${type} entry deleted successfully`,
+            data: deletedDoc,
+        });
+    } catch (error) {
+        console.error("Error deleting earning/expense:", error);
+        return res.status(500).json({
+            message: "Internal server error",
+        });
     }
 });
 
@@ -766,6 +883,72 @@ const handleToGetSupplierTransactionByOneByOne = asyncHandler(async (req, res) =
         });
     }
 });
+const handleToDeleteTheEntriesOfSupplierTransection = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== "admin") {
+            return res.status(403).json({
+                message: "Forbidden: Only admin can access supplier transactions",
+            });
+        }
+
+        const { supplierId, type, objId } = req.body;
+
+        if (!supplierId || !type || !objId) {
+            return res.status(400).json({
+                message: "supplierId, type and objId are required",
+            });
+        }
+
+        if (!["givenToAdmin", "takenFromAdmin"].includes(type)) {
+            return res.status(400).json({
+                message: "type must be either givenToAdmin or takenFromAdmin",
+            });
+        }
+
+        const record = await SupplierTransactionRecord.findOne({ supplierId });
+
+        if (!record) {
+            return res.status(404).json({
+                message: "Supplier transaction record not found",
+            });
+        }
+
+        const entryIndex = record[type].findIndex(
+            (item) => item._id.toString() === objId
+        );
+
+        if (entryIndex === -1) {
+            return res.status(404).json({
+                message: "Entry not found in selected transaction type",
+            });
+        }
+
+        const entry = record[type][entryIndex];
+
+        if (type === "givenToAdmin") {
+            record.totalGiven = Math.max(0, record.totalGiven - entry.Rs);
+        } else {
+            record.totalTaken = Math.max(0, record.totalTaken - entry.Rs);
+        }
+
+        record[type].splice(entryIndex, 1);
+
+        await record.save();
+
+        return res.status(200).json({
+            message: "Supplier transaction entry deleted successfully",
+            data: record,
+        });
+    } catch (error) {
+        console.error("Error deleting supplier transaction entry:", error);
+        return res.status(500).json({
+            message: "Internal server error",
+        });
+    }
+});
+
 
 const handleToAddPersonalTransectionalUser = async (req, res) => {
     try {
@@ -1304,14 +1487,17 @@ module.exports = {
     handleToCreateTransectionUser,
     handleToGetTransectionUserListByAdmin,
     handleToMakeTransectionBetweenAdminAndUser,
+    handleToDeleteTheEntreisOfTransectionalUser,
     handleToAddTheHotelExpense,
     handleToAddTheHotelEarning,
     handleToGetEarningandExpenseReport,
+    handleToDeleteEarningOrExpenseEntriesByAdmin,
     handleToGetTransectionUserRecordByAdmin,
     handleToAddTheHotelSupplierPerson,
     handleToGetTheHotelSupplierPerson,
     handleToAddSupplierTransaction,
     handleToGetSupplierTransactionByOneByOne,
+    handleToDeleteTheEntriesOfSupplierTransection,
     handleToCalculateTotalTakenAndGivenMoney,
     handleToCreatePersonalCustomerEntry,
     handleToAddPersonalTransectionalUser,
