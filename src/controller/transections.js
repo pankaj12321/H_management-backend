@@ -1323,9 +1323,10 @@ const handleToCreatePersonalCustomerEntry = asyncHandler(async (req, res) => {
 
         const payload = req.body;
 
-        if (!payload.personalCustomerRecordTranId || !payload.billAmount || !payload.amountPaidAfterDiscount || !payload.paymentMode || !payload.paymentScreenshoot || !payload.description || !payload.status) {
+        // Note: paymentScreenshoot is handled via req.file (multipart upload), not req.body
+        if (!payload.personalCustomerRecordTranId || !payload.billAmount || !payload.amountPaidAfterDiscount || !payload.paymentMode || !payload.description || !payload.status) {
             return res.status(400).json({
-                message: "Invalid Payload: 'personalCustomerRecordTranId', 'billAmount', 'amountPaidAfterDiscount', 'paymentMode', 'paymentScreenshoot', 'description' and 'status' are required"
+                message: "Invalid Payload: 'personalCustomerRecordTranId', 'billAmount', 'amountPaidAfterDiscount', 'paymentMode', 'description' and 'status' are required"
             });
         }
 
