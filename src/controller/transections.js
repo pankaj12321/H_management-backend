@@ -25,6 +25,7 @@ const getBaseUrl = (req) => {
 
 const { personalTransectionalUser } = require('../models/peronalTransectionalUser')
 const personalTransectionUserRecord = require('../models/personalTransectionalRecord')
+const khatabookTransectionUser= require('../models/khatabookCustomer')
 
 const handleToCreateTransectionUser = async (req, res, next) => {
     try {
@@ -1484,6 +1485,73 @@ const handleToDeletePersonalCustomerEntry = asyncHandler(async (req, res) => {
     }
 });
 
+// khatabook api's of user:::::::::::::::::::::::::::::::::::::::::
+
+const handleToCreateTransectionUserForKhataBook = async (req, res, next) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role.toLowerCase() !== "admin") {
+            return res.status(403).json({
+                message: "Forbidden! You are not authorized to create Transection User.",
+            });
+        }
+
+        const payload = req.body;
+
+        if (!payload.name || !payload.mobile ||!payload.city) {
+            return res.status(400).json({
+                message:
+                    "Invalid Payload! 'name', 'mobile' are required.",
+            });
+        }
+        const existingUser = await khatabookTransectionUser.findOne({ mobile: payload.mobile });
+        if (existingUser) {
+            return res.status(409).json({ message: " khatabook Transection User with this mobile number already exists." });
+        }
+        if (!existingUser) {
+            const newTransectionUser = new khatabookTransectionUser({
+                name: payload.name,
+                mobile: payload.mobile,
+                city:payload.city,
+                email: payload.email || '',
+                khatabookUserId: entityIdGenerator("TR"),
+                status: 'Active'
+            });
+            await newTransectionUser.save();
+            return res.status(201).json({ message: " khatabook Transection User created successfully.", data: newTransectionUser });
+        } else {
+            return res.status(400).json({ message: " khatabook Transection User creation failed." });
+        }
+    } catch (err) {
+        console.error("Error in creating transection user:", err);
+        return res.status(500).json({ message: "Internal Server Error", error: err.message });
+    }
+};
+
+const handleToGetKhatabookUserListByAdmin = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
+        }
+        const queryParams = req.query;
+        const matchQuery = {};
+
+        if (queryParams.khatabookUserId) {
+            matchQuery.khatabookUserId = queryParams.khatabookUserId;
+        }
+
+        const transectionUsers = await khatabookTransectionUser.find(matchQuery).sort({ createdAt: -1 });
+
+        return res.status(200).json({ message: "khatabook Users fetched successfully", data: transectionUsers });
+    } catch (err) {
+        console.error("Error in fetching khatabook Users:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+
 module.exports = {
     handleToCreateTransectionUser,
     handleToGetTransectionUserListByAdmin,
@@ -1510,6 +1578,8 @@ module.exports = {
     handleToGetPersonalCustomerEntryByAdmin,
     handleToUpdatePersonalCustomerEntry,
     handleToDeletePersonalCustomerEntry,
-    handleToUpdateThPersonalCustomerProfile
+    handleToUpdateThPersonalCustomerProfile,
+    handleToCreateTransectionUserForKhataBook,
+    handleToGetKhatabookUserListByAdmin
 
 };
