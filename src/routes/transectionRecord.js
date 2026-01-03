@@ -31,7 +31,10 @@ const {
     handleToUpdateThPersonalCustomerProfile,
     handleToDeleteTheEntreisOfTransectionalUser,
     handleToCreateTransectionUserForKhataBook,
-    handleToGetKhatabookUserListByAdmin
+    handleToGetKhatabookUserListByAdmin,
+    handleToMakeTransectionBetweenAdminAndKhatabookUser,
+    handleToGetKhatabookUserRecordByAdmin,
+    handleToDeleteTheEntreisOfKhatabookUser
 } = require('../controller/transections');
 const { verify } = require("jsonwebtoken");
 
@@ -90,7 +93,10 @@ router.patch('/update/personal/customer/entry', verifyToken, upload.single("paym
 router.delete('/delete/personal/customer/entry', verifyToken, handleToDeletePersonalCustomerEntry)
 
 // Routes for khatabook user:::::::::::::::::::::::::::
-router.post('/add/khatabook/user',verifyToken,handleToCreateTransectionUserForKhataBook)
-router.get('/get/khatabook/users',verifyToken,handleToGetKhatabookUserListByAdmin)
+router.post('/add/khatabook/user', verifyToken, handleToCreateTransectionUserForKhataBook)
+router.get('/get/khatabook/users', verifyToken, handleToGetKhatabookUserListByAdmin)
+router.post('/add/khatabook/transection', verifyToken, upload.single("paymentScreenshoot"), handleToMakeTransectionBetweenAdminAndKhatabookUser)
+router.get('/get/khatabook/transection', verifyToken, handleToGetKhatabookUserRecordByAdmin)
+router.delete('/delete/khatabook/transection-entry', verifyToken, handleToDeleteTheEntreisOfKhatabookUser)
 const transectionRecordRouter = router
 module.exports = transectionRecordRouter;

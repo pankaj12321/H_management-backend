@@ -25,7 +25,8 @@ const getBaseUrl = (req) => {
 
 const { personalTransectionalUser } = require('../models/peronalTransectionalUser')
 const personalTransectionUserRecord = require('../models/personalTransectionalRecord')
-const khatabookTransectionUser= require('../models/khatabookCustomer')
+const khatabookTransectionUser = require('../models/khatabookCustomer')
+const khatabookTransectionUserRecord = require('../models/khatabooktransectionUser')
 
 const handleToCreateTransectionUser = async (req, res, next) => {
     try {
@@ -141,7 +142,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
         }
 
-        const transectionUserRecord = await TransactionalUser.findOne({
+        const KhataBookTransectionUserRecord = await khataBookTransectionUser.findOne({
             transectionUserId: payload.transectionUserId
         });
 
@@ -1499,7 +1500,7 @@ const handleToCreateTransectionUserForKhataBook = async (req, res, next) => {
 
         const payload = req.body;
 
-        if (!payload.name || !payload.mobile ||!payload.city) {
+        if (!payload.name || !payload.mobile || !payload.city) {
             return res.status(400).json({
                 message:
                     "Invalid Payload! 'name', 'mobile' are required.",
@@ -1513,7 +1514,7 @@ const handleToCreateTransectionUserForKhataBook = async (req, res, next) => {
             const newTransectionUser = new khatabookTransectionUser({
                 name: payload.name,
                 mobile: payload.mobile,
-                city:payload.city,
+                city: payload.city,
                 email: payload.email || '',
                 khatabookUserId: entityIdGenerator("TR"),
                 status: 'Active'
@@ -1551,6 +1552,293 @@ const handleToGetKhatabookUserListByAdmin = asyncHandler(async (req, res) => {
     }
 });
 
+const handleToMakeTransectionBetweenAdminAndKhatabookUser = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+
+        const payload = req.body;
+        console.log("Khatabook Transaction Payload:", JSON.stringify(payload, null, 2));
+
+        if (payload.givenToAdmin && typeof payload.givenToAdmin === "string") {
+            payload.givenToAdmin = JSON.parse(payload.givenToAdmin);
+        }
+
+        if (payload.takenFromAdmin && typeof payload.takenFromAdmin === "string") {
+            payload.takenFromAdmin = JSON.parse(payload.takenFromAdmin);
+        }
+
+        if (!payload.khatabookUserId) {
+            return res.status(400).json({
+                message: "Invalid Payload: khatabookUserId is required"
+            });
+        }
+
+        if (!payload.givenToAdmin && !payload.takenFromAdmin) {
+            return res.status(400).json({
+                message: "Either givenToAdmin or takenFromAdmin is required"
+            });
+        }
+
+        if (payload.givenToAdmin && !payload.givenToAdmin.hotelBranchName) {
+            return res.status(400).json({
+                message: "hotelBranchName is required in givenToAdmin"
+            });
+        }
+
+        if (payload.takenFromAdmin && !payload.takenFromAdmin.hotelBranchName) {
+            return res.status(400).json({
+                message: "hotelBranchName is required in takenFromAdmin"
+            });
+        }
+        let screenshotUrl = null;
+        if (req.file) {
+            screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
+        }
+
+        const khatabookUser = await khatabookTransectionUser.findOne({
+            khatabookUserId: payload.khatabookUserId
+        });
+
+        if (!khatabookUser) {
+            return res.status(404).json({
+                message: " khatabook Transection User not found"
+            });
+        }
+
+        let existingRecord = await khatabookTransectionUserRecord.findOne({
+            khatabookUserId: payload.khatabookUserId
+        });
+
+        if (existingRecord) {
+
+            if (payload.givenToAdmin) {
+                existingRecord.givenToAdmin.push({
+                    Rs: payload.givenToAdmin.Rs,
+                    returnDate: payload.givenToAdmin.returnDate,
+                    description: payload.givenToAdmin.description,
+                    paymentMode: payload.givenToAdmin.paymentMode,
+                    billno: payload.givenToAdmin.billno || null,
+                    hotelBranchName: payload.givenToAdmin.hotelBranchName,
+                    paymentScreenshoot: screenshotUrl,
+                    updatedAt: getISTTime()
+                });
+                existingRecord.totalGiven += payload.givenToAdmin.Rs;
+            }
+
+            if (payload.takenFromAdmin) {
+                existingRecord.takenFromAdmin.push({
+                    Rs: payload.takenFromAdmin.Rs,
+                    returnDate: payload.takenFromAdmin.returnDate,
+                    description: payload.takenFromAdmin.description,
+                    billno: payload.takenFromAdmin.billno || null,
+                    hotelBranchName: payload.takenFromAdmin.hotelBranchName,
+                    paymentMode: payload.takenFromAdmin.paymentMode,
+                    paymentScreenshoot: screenshotUrl,
+                    updatedAt: getISTTime()
+                });
+                existingRecord.totalTaken += payload.takenFromAdmin.Rs;
+            }
+
+            await existingRecord.save();
+
+            return res.status(200).json({
+                message: "Transaction updated successfully",
+                data: existingRecord
+            });
+        }
+
+        // ⭐ CREATE NEW RECORD
+        const transectionRecord = new khatabookTransectionUserRecord({
+            khatabookUserId: payload.khatabookUserId
+        });
+
+        if (payload.givenToAdmin) {
+            transectionRecord.givenToAdmin.push({
+                Rs: payload.givenToAdmin.Rs,
+                paymentScreenshoot: screenshotUrl,
+                returnDate: payload.givenToAdmin.returnDate,
+                description: payload.givenToAdmin.description,
+                billno: payload.givenToAdmin.billno || null,
+                hotelBranchName: payload.givenToAdmin.hotelBranchName,
+                paymentMode: payload.givenToAdmin.paymentMode,
+                updatedAt: getISTTime()
+            });
+            transectionRecord.totalGiven += payload.givenToAdmin.Rs;
+        }
+
+        if (payload.takenFromAdmin) {
+            transectionRecord.takenFromAdmin.push({
+                Rs: payload.takenFromAdmin.Rs,
+                returnDate: payload.takenFromAdmin.returnDate,
+                description: payload.takenFromAdmin.description,
+                billno: payload.takenFromAdmin.billno || null,
+                hotelBranchName: payload.takenFromAdmin.hotelBranchName,
+                paymentScreenshoot: screenshotUrl,
+                paymentMode: payload.takenFromAdmin.paymentMode,
+                updatedAt: getISTTime()
+            });
+            transectionRecord.totalTaken += payload.takenFromAdmin.Rs;
+        }
+
+        await transectionRecord.save();
+
+        return res.status(200).json({
+            message: "Transaction recorded successfully",
+            data: transectionRecord
+        });
+
+    } catch (err) {
+        console.error("Error in recording transaction:", err);
+        return res.status(500).json({
+            message: "Internal Server Error",
+            error: err.message
+        });
+    }
+});
+
+const handleToGetKhatabookUserRecordByAdmin = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== 'admin') {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access"
+            });
+        }
+
+        const query = req.query;
+        let matchQuery = {};
+
+        if (query.khatabookUserId) {
+            matchQuery.khatabookUserId = query.khatabookUserId;
+        }
+        const pipeline = [];
+
+        pipeline.push({ $match: matchQuery });
+
+        if (query.hotelBranchName) {
+            pipeline.push({
+                $addFields: {
+                    givenToAdmin: {
+                        $filter: {
+                            input: "$givenToAdmin",
+                            as: "item",
+                            cond: { $eq: ["$$item.hotelBranchName", query.hotelBranchName] }
+                        }
+                    },
+                    takenFromAdmin: {
+                        $filter: {
+                            input: "$takenFromAdmin",
+                            as: "item",
+                            cond: { $eq: ["$$item.hotelBranchName", query.hotelBranchName] }
+                        }
+                    }
+                }
+            });
+        }
+        const transectionRecord = await khatabookTransectionUserRecord.find(matchQuery);
+        const countDocuments = await khatabookTransectionUserRecord.countDocuments(matchQuery);
+
+        if (countDocuments === 0) {
+            return res.status(404).json({
+                message: "No transection records found for the given criteria"
+            });
+        }
+        if (!transectionRecord) {
+            return res.status(404).json({
+                message: "Transection record not found for the given user ID"
+            });
+        }
+
+        return res.status(200).json({
+            message: "Transection record fetched successfully",
+            data: transectionRecord,
+            count: countDocuments
+        });
+
+    } catch (err) {
+        console.error("Error in fetching transection record:", err);
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+});
+
+const handleToDeleteTheEntreisOfKhatabookUser = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== "admin") {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access",
+            });
+        }
+
+        const { khatabookUserId, type, objId } = req.body;
+
+        if (!khatabookUserId || !type || !objId) {
+            return res.status(400).json({
+                message: "khatabookUserId, type and objId are required",
+            });
+        }
+
+        if (!["givenToAdmin", "takenFromAdmin"].includes(type)) {
+            return res.status(400).json({
+                message: "type must be either givenToAdmin or takenFromAdmin",
+            });
+        }
+
+        const record = await khatabookTransectionUserRecord.findOne({ khatabookUserId });
+
+        if (!record) {
+            return res.status(404).json({
+                message: "Khatabook record not found",
+            });
+        }
+
+        const entry = record[type].find(
+            (item) => item._id.toString() === objId
+        );
+
+        if (!entry) {
+            return res.status(404).json({
+                message: "Entry not found in selected transaction type",
+            });
+        }
+
+        if (type === "givenToAdmin") {
+            record.totalGiven -= entry.Rs;
+        } else {
+            record.totalTaken -= entry.Rs;
+        }
+
+        record[type] = record[type].filter(
+            (item) => item._id.toString() !== objId
+        );
+
+        await record.save();
+
+        return res.status(200).json({
+            message: " khatabook Transaction entry deleted successfully",
+            data: record,
+        });
+    } catch (err) {
+        console.error("Error deleting transaction entry:", err);
+        return res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
+});
+
+
+
+
 
 module.exports = {
     handleToCreateTransectionUser,
@@ -1580,6 +1868,9 @@ module.exports = {
     handleToDeletePersonalCustomerEntry,
     handleToUpdateThPersonalCustomerProfile,
     handleToCreateTransectionUserForKhataBook,
-    handleToGetKhatabookUserListByAdmin
+    handleToGetKhatabookUserListByAdmin,
+    handleToMakeTransectionBetweenAdminAndKhatabookUser,
+    handleToGetKhatabookUserRecordByAdmin,
+    handleToDeleteTheEntreisOfKhatabookUser
 
 };
