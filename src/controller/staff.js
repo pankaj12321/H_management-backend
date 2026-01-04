@@ -403,14 +403,18 @@ const handleToGetStaffKhatabook = asyncHandler(async (req, res) => {
         }
 
         const khatabook = await StaffKhatabook.findOne({ staffId });
-        if (!khatabook) {
-            return res.status(404).json({ message: "Khatabook not found for this staff" });
+        if (khatabook == 0) {
+            return res.status(404).json({
+                message: "Khatabook not found for this staff",
+                khatabook: []
+            });
         }
-
-        return res.status(200).json({
-            message: "Khatabook fetched successfully",
-            khatabook
-        });
+        else {
+            return res.status(200).json({
+                message: "Khatabook fetched successfully",
+                khatabook
+            });
+        }
     } catch (err) {
         console.error("Error fetching staff khatabook:", err);
         res.status(500).json({ message: "Internal Server Error" });
