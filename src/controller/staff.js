@@ -417,6 +417,72 @@ const handleToGetStaffKhatabook = asyncHandler(async (req, res) => {
     }
 });
 
+const handleToDeleteTheKhataBookEntriesOfStaff = asyncHandler(async (req, res) => {
+    try {
+        const decodedToken = req.user;
+
+        if (!decodedToken || decodedToken.role !== "admin") {
+            return res.status(403).json({
+                message: "Forbidden: invalid token/Unauthorized access",
+            });
+        }
+
+        const { staffId, type, objId } = req.body;
+
+        if (!staffId || !type || !objId) {
+            return res.status(400).json({
+                message: "staffId, type and objId are required",
+            });
+        }
+
+        if (!["givenToAdmin", "takenFromAdmin"].includes(type)) {
+            return res.status(400).json({
+                message: "type must be either givenToAdmin or takenFromAdmin",
+            });
+        }
+
+        const record = await StaffKhatabook.findOne({ staffId });
+
+        if (!record) {
+            return res.status(404).json({
+                message: "staff khatabook record not found",
+            });
+        }
+
+        const entry = record[type].find(
+            (item) => item._id.toString() === objId
+        );
+
+        if (!entry) {
+            return res.status(404).json({
+                message: " Entry not found in selected transaction type",
+            });
+        }
+
+        if (type === "givenToAdmin") {
+            record.totalGiven -= entry.Rs;
+        } else {
+            record.totalTaken -= entry.Rs;
+        }
+
+        record[type] = record[type].filter(
+            (item) => item._id.toString() !== objId
+        );
+
+        await record.save();
+
+        return res.status(200).json({
+            message: "Transaction entry deleted successfully",
+            data: record,
+        });
+    } catch (err) {
+        console.error("Error deleting transaction entry:", err);
+        return res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
+});
+
 module.exports = {
     handleToAddStaffUserByAdmin,
     handleToGetStaffListByAdmin,
@@ -424,5 +490,6 @@ module.exports = {
     handleToDeleteTheStaffByAdmin,
     handleToGetStaffMonthlySalary,
     handleToAddStaffTransaction,
-    handleToGetStaffKhatabook
+    handleToGetStaffKhatabook,
+    handleToDeleteTheKhataBookEntriesOfStaff
 }

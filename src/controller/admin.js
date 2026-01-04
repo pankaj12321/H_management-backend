@@ -148,7 +148,7 @@ const handleToEditTheDriverProfileByAdmin = asyncHandler(async (req, res) => {
         .status(403)
         .json({ message: "Forbidden! You are not authorized to edit driver profile" });
     }
-    const { driverId, name, carNumber, mobile, srNumber } = req.body;
+    const { driverId, name, carNumber, mobile, srNumber, location } = req.body;
     if (!driverId) {
       return res.status(400).json({ message: "driverId is required" });
     }
@@ -163,6 +163,7 @@ const handleToEditTheDriverProfileByAdmin = asyncHandler(async (req, res) => {
       carNumber: carNumber ?? driverDetails.carNumber,
       mobile: mobile ?? driverDetails.mobile,
       srNumber: srNumber ?? driverDetails.srNumber,
+      location: location ?? driverDetails.location,
       updatedAt: Date.now(),
     };
 

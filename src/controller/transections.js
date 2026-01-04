@@ -142,7 +142,7 @@ const handleToMakeTransectionBetweenAdminAndUser = asyncHandler(async (req, res)
             screenshotUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
         }
 
-        const KhataBookTransectionUserRecord = await khataBookTransectionUser.findOne({
+        const transectionUserRecord = await TransactionalUser.findOne({
             transectionUserId: payload.transectionUserId
         });
 

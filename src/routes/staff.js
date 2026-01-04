@@ -11,7 +11,8 @@ const {
     handleToDeleteTheStaffByAdmin,
     handleToGetStaffMonthlySalary,
     handleToAddStaffTransaction,
-    handleToGetStaffKhatabook
+    handleToGetStaffKhatabook,
+    handleToDeleteTheKhataBookEntriesOfStaff
 } = require("../controller/staff");
 
 router.post(
@@ -47,6 +48,8 @@ router.post("/khatabook/add-transaction",
 );
 
 router.get("/khatabook/get-details", verifyToken, handleToGetStaffKhatabook);
+
+router.delete("/khatabook/delete-entry", verifyToken, handleToDeleteTheKhataBookEntriesOfStaff);
 
 
 
