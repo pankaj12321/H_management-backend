@@ -4,10 +4,14 @@ const upload = require("../middleware/paymentScreenshoot");
 
 const router = express.Router();
 
-const { handleToAddStaffUserByAdmin,
+const {
+    handleToAddStaffUserByAdmin,
     handleToGetStaffListByAdmin,
     handleToUpdateStaffByAdmin,
-    handleToDeleteTheStaffByAdmin
+    handleToDeleteTheStaffByAdmin,
+    handleToGetStaffMonthlySalary,
+    handleToAddStaffTransaction,
+    handleToGetStaffKhatabook
 } = require("../controller/staff");
 
 router.post(
@@ -30,7 +34,20 @@ router.patch(
         { name: "IdProofImage", maxCount: 1 }
     ]),
     handleToUpdateStaffByAdmin
-); router.delete("/delete-staff", verifyToken, handleToDeleteTheStaffByAdmin);
+);
+
+router.delete("/delete-staff", verifyToken, handleToDeleteTheStaffByAdmin);
+
+router.get("/calculate-salary", verifyToken, handleToGetStaffMonthlySalary);
+
+router.post("/khatabook/add-transaction",
+    verifyToken,
+    upload.fields([{ name: "paymentScreenshoot", maxCount: 1 }]),
+    handleToAddStaffTransaction
+);
+
+router.get("/khatabook/get-details", verifyToken, handleToGetStaffKhatabook);
+
 
 
 

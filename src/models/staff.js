@@ -26,9 +26,15 @@ const staffSchema = new mongoose.Schema({
     branchName: {
         type: String,
     },
-    salary:{
-        type:Number
+    salary: {
+        type: Number
     },
+    salaryHistory: [
+        {
+            salary: { type: Number },
+            effectiveDate: { type: Date, default: Date.now }
+        }
+    ],
     gender: {
         type: String,
     },
@@ -73,6 +79,7 @@ const staffSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+
 },
     { timestamps: true }
 )
