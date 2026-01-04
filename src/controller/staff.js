@@ -401,7 +401,6 @@ const handleToGetStaffKhatabook = asyncHandler(async (req, res) => {
         if (!staffId) {
             return res.status(400).json({ message: "staffId is required" });
         }
-
         const khatabook = await StaffKhatabook.findOne({ staffId });
         if (khatabook == 0) {
             return res.status(404).json({
