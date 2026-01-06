@@ -20,7 +20,7 @@ router.post(
     verifyToken,
     upload.fields([
         { name: "profileImage", maxCount: 1 },
-        { name: "IdProofImage", maxCount: 1 }
+        { name: "IdProofImage", maxCount: 2 }
     ]),
     handleToAddStaffUserByAdmin
 );
@@ -32,7 +32,7 @@ router.patch(
     verifyToken,
     upload.fields([
         { name: "profileImage", maxCount: 1 },
-        { name: "IdProofImage", maxCount: 1 }
+        { name: "IdProofImage", maxCount: 2 }
     ]),
     handleToUpdateStaffByAdmin
 );

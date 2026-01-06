@@ -42,7 +42,7 @@ const staffSchema = new mongoose.Schema({
         type: String,
     },
     IdProofImage: {
-        type: String,
+        type: [String],
     },
     adharNumber: {
         type: String

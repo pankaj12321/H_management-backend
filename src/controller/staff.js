@@ -38,14 +38,14 @@ const handleToAddStaffUserByAdmin = asyncHandler(async (req, res) => {
         const baseUrl = `${req.protocol}://${req.get("host")}`;
 
         let profileImageUrl = "";
-        let idProofImageUrl = "";
+        let idProofImageUrls = [];
 
         if (req.files?.profileImage?.length > 0) {
             profileImageUrl = `${baseUrl}/uploads/paymentScreenshots/${req.files.profileImage[0].filename}`;
         }
 
         if (req.files?.IdProofImage?.length > 0) {
-            idProofImageUrl = `${baseUrl}/uploads/paymentScreenshots/${req.files.IdProofImage[0].filename}`;
+            idProofImageUrls = req.files.IdProofImage.map(file => `${baseUrl}/uploads/paymentScreenshots/${file.filename}`);
         }
 
         const staffId = entityIdGenerator("ST");
@@ -68,7 +68,7 @@ const handleToAddStaffUserByAdmin = asyncHandler(async (req, res) => {
             branchName: payload.branchName,
             salary: payload.salary,
             salaryHistory: payload.salary ? [{ salary: payload.salary, effectiveDate: new Date() }] : [],
-            IdProofImage: idProofImageUrl,
+            IdProofImage: idProofImageUrls,
             createdAt: new Date(),
             updatedAt: new Date(),
             staffId
@@ -138,14 +138,14 @@ const handleToUpdateStaffByAdmin = asyncHandler(async (req, res) => {
         const baseUrl = `${req.protocol}://${req.get("host")}`;
 
         let profileImageUrl = existingStaffUser.profileImage;
-        let idProofImageUrl = existingStaffUser.IdProofImage;
+        let idProofImageUrls = existingStaffUser.IdProofImage || [];
 
         if (req.files?.profileImage?.length > 0) {
-            profileImageUrl = `${baseUrl}/uploads/staff/${req.files.profileImage[0].filename}`;
+            profileImageUrl = `${baseUrl}/uploads/paymentScreenshots/${req.files.profileImage[0].filename}`;
         }
 
         if (req.files?.IdProofImage?.length > 0) {
-            idProofImageUrl = `${baseUrl}/uploads/staff/${req.files.IdProofImage[0].filename}`;
+            idProofImageUrls = req.files.IdProofImage.map(file => `${baseUrl}/uploads/paymentScreenshots/${file.filename}`);
         }
 
         const isSalaryUpdated = payload.salary !== undefined && payload.salary !== existingStaffUser.salary;
@@ -163,7 +163,7 @@ const handleToUpdateStaffByAdmin = asyncHandler(async (req, res) => {
                 DOB: payload.DOB ?? existingStaffUser.DOB,
                 adharNumber: payload.adharNumber ?? existingStaffUser.adharNumber,
                 profileImage: profileImageUrl,
-                IdProofImage: idProofImageUrl,
+                IdProofImage: idProofImageUrls,
                 address: {
                     city: payload.address?.city ?? existingStaffUser.address?.city,
                     state: payload.address?.state ?? existingStaffUser.address?.state,
