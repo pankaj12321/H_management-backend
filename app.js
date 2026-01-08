@@ -14,7 +14,8 @@ const allowedOrigins = [
   'http://localhost:4200',
   'http://localhost:5000',
   'https://blpoonamhotelandrestaurant.netlify.app',
-  'https://hotel-api.duckdns.org'
+  'https://hotel-api.duckdns.org',
+  'http://localhost:3000'
 ];
 
 if (process.env.ALLOWED_ORIGINS) {
