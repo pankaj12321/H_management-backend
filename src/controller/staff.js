@@ -6,7 +6,6 @@ const { sendEmail, sendSms } = require("../services/service");
 const jwt = require("jsonwebtoken");
 const { createTokenHandler } = require("../services/authToken");
 const { entityIdGenerator } = require("../utils/entityGenerator")
-const redisClient = require("../config/redis");
 const Staff = require("../models/staff");
 const { attendanceRecord } = require("../models/attendance");
 const StaffKhatabook = require("../models/staffKhatabook");

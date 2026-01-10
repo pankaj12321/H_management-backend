@@ -4,7 +4,6 @@ const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const { createTokenHandler } = require("../services/authToken");
 const { entityIdGenerator } = require("../utils/entityGenerator")
-const redisClient = require("../config/redis");
 const TransactionalUser = require('../models/transectional_user')
 const TransectionUserRecord = require('../models/transectionRecord');
 const { Earning } = require('../models/expense_earning')

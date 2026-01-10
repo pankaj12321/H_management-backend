@@ -7,7 +7,6 @@ const jwt = require("jsonwebtoken");
 const { createTokenHandler } = require("../services/authToken");
 const { deleteToken } = require("../middleware/verifyToken");
 const { entityIdGenerator } = require("../utils/entityGenerator")
-const redisClient = require("../config/redis");
 const DriverCommisionEntry = require("../models/driverCommisionEntry");
 const sendWhatsAppMessage = require('../services/whatsapp');
 

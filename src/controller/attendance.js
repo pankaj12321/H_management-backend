@@ -5,7 +5,6 @@ const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const { createTokenHandler } = require("../services/authToken");
 const { entityIdGenerator } = require("../utils/entityGenerator")
-const redisClient = require("../config/redis");
 const { attendanceRecord } = require('../models/attendance')
 const Staff = require("../models/staff");
 
@@ -167,7 +166,7 @@ const handleToGetAttendanceOfStaff = async (req, res) => {
 
     // Pagination
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 1000;
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
     const paginatedData = responseData.slice(startIndex, endIndex);
