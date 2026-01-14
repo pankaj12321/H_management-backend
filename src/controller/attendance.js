@@ -214,17 +214,22 @@ const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
       });
     }
 
-    const today = new Date(
-      new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+    // Block only future dates
+    const todayIST = new Date(
+      new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" })
     );
 
-    const selectedDate = new Date(year, month - 1, date);
-    if (selectedDate > today) {
+    const selectedDate = new Date(
+      `${year}-${String(month).padStart(2, "0")}-${String(date).padStart(2, "0")}`
+    );
+
+    if (selectedDate > todayIST) {
       return res.status(400).json({
         message: "Cannot update attendance for future dates.",
       });
     }
 
+    // ✅ CORRECT UPDATE (object-based)
     const updatedAttendance = await attendanceRecord.findOneAndUpdate(
       {
         staffId,
@@ -234,8 +239,8 @@ const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
       },
       {
         $set: {
-          "attendanceDetails.$.attendance": attendance,
-          "attendanceDetails.$.time": new Date().toLocaleTimeString("en-IN", {
+          "attendanceDetails.attendance": attendance,
+          "attendanceDetails.time": new Date().toLocaleTimeString("en-IN", {
             hour: "2-digit",
             minute: "2-digit",
             timeZone: "Asia/Kolkata",
@@ -252,34 +257,36 @@ const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
       });
     }
 
-    const formattedUpdatedTime = new Date(
-      updatedAttendance.updatedAt
-    ).toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Asia/Kolkata",
-    });
+    // Format updatedAt for UI
+    const formattedUpdatedTime = new Date(updatedAttendance.updatedAt)
+      .toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Kolkata",
+      });
 
-    const formattedUpdatedDate = new Date(
-      updatedAttendance.updatedAt
-    ).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      timeZone: "Asia/Kolkata",
-    });
+    const formattedUpdatedDate = new Date(updatedAttendance.updatedAt)
+      .toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "Asia/Kolkata",
+      });
 
     return res.status(200).json({
       message: "Attendance updated successfully.",
-      updatedAt: updatedAttendance.updatedAt, // real Date (for backend)
-      updatedAtFormatted: `${formattedUpdatedDate}, ${formattedUpdatedTime}`, // UI friendly
+      updatedAt: updatedAttendance.updatedAt,
+      updatedAtFormatted: `${formattedUpdatedDate}, ${formattedUpdatedTime}`,
       data: updatedAttendance,
     });
+
   } catch (err) {
     console.error("Attendance update error:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
 
 
 
