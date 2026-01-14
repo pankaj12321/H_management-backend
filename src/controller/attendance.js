@@ -196,74 +196,92 @@ const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
 
     if (!decodedToken || decodedToken.role.toLowerCase() !== "admin") {
       return res.status(403).json({
-        message: "Forbidden! You are not authorized to view attendance data.",
+        message: "Forbidden! You are not authorized.",
       });
     }
 
-    const payload = req.body;
-    if (!payload.staffId || !payload.date ||
-      !payload.month || !payload.year ||
-      !payload.attendance) {
+    const { staffId, date, month, year, attendance } = req.body;
+
+    if (!staffId || !date || !month || !year || !attendance) {
       return res.status(400).json({
-        message: "Bad Request! Please provide all required fields: date, month, year, staffId, and attendance.",
-      });
-    }
-    if (!["Present", "Absent", "Half Day", "Paid Leave"].includes(payload.attendance)) {
-      return res.status(400).json({
-        message: "Bad Request! Invalid attendance status.",
-      });
-    }
-    const todaysDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-    if (payload.year > todaysDate.getFullYear() ||
-      (payload.year === todaysDate.getFullYear() && payload.month > (todaysDate.getMonth() + 1)) ||
-      (payload.year === todaysDate.getFullYear() && payload.month === (todaysDate.getMonth() + 1) &&
-        payload.date > todaysDate.getDate())) {
-      return res.status(400).json({
-        message: "Bad Request! Cannot update attendance for future dates.",
+        message: "All fields are required.",
       });
     }
 
-    const attendanceDetails = await attendanceRecord.find({
-      staffId: payload.staffId,
-      "attendanceDetails.date": payload.date,
-      "attendanceDetails.month": payload.month,
-      "attendanceDetails.year": payload.year,
+    if (!["Present", "Absent", "Half Day", "Paid Leave"].includes(attendance)) {
+      return res.status(400).json({
+        message: "Invalid attendance status.",
+      });
+    }
+
+    const today = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
+    );
+
+    const selectedDate = new Date(year, month - 1, date);
+    if (selectedDate > today) {
+      return res.status(400).json({
+        message: "Cannot update attendance for future dates.",
+      });
+    }
+
+    const updatedAttendance = await attendanceRecord.findOneAndUpdate(
+      {
+        staffId,
+        "attendanceDetails.date": date,
+        "attendanceDetails.month": month,
+        "attendanceDetails.year": year,
+      },
+      {
+        $set: {
+          "attendanceDetails.$.attendance": attendance,
+          "attendanceDetails.$.time": new Date().toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "Asia/Kolkata",
+          }),
+          attendanceStatus: "Edited",
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedAttendance) {
+      return res.status(404).json({
+        message: "Attendance record not found.",
+      });
+    }
+
+    const formattedUpdatedTime = new Date(
+      updatedAttendance.updatedAt
+    ).toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Kolkata",
     });
 
-    if (attendanceDetails.length === 0) {
-      return res.status(404).json({
-        message: "Attendance record not found for the given details.",
-      });
-    }
-
-    // for(const record of attendanceDetails){
-    //   record.attendanceDetails.attendance= payload.attendance;
-    //   await record.save();
-    // }
-    for (const record of attendanceDetails) {
-      record.attendanceDetails.attendance = payload.attendance;
-      record.attendanceDetails.time = new Date().toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        timeZone: "Asia/Kolkata",
-      });
-      record.attendanceStatus = "Edited";
-      await record.save();
-    }
-    attendanceDetails.updatedAt = new Date();
+    const formattedUpdatedDate = new Date(
+      updatedAttendance.updatedAt
+    ).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: "Asia/Kolkata",
+    });
 
     return res.status(200).json({
       message: "Attendance updated successfully.",
-      data: attendanceDetails,
+      updatedAt: updatedAttendance.updatedAt, // real Date (for backend)
+      updatedAtFormatted: `${formattedUpdatedDate}, ${formattedUpdatedTime}`, // UI friendly
+      data: updatedAttendance,
     });
-
-  }
-  catch (err) {
-    console.error("Error fetching attendance data:", err);
+  } catch (err) {
+    console.error("Attendance update error:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
-}
+};
+
+
 
 module.exports = {
   handleToMarkAttendanceOfStaff,
