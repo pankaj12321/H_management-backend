@@ -1,11 +1,13 @@
 const express = require("express");
 const { verifyToken } = require("../middleware/verifyToken");
 const router = express.Router();
+const upload = require("../middleware/paymentScreenshoot");
+
 
 
 const notesController = require("../controller/notes");
 
-router.post("/add", verifyToken, notesController.createNotes);
+router.post("/add", verifyToken, upload.single("imageUrl"), notesController.createNotes);
 
 router.get("/get/all", verifyToken, notesController.getNotes);
 

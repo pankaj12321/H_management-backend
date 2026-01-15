@@ -11,6 +11,9 @@ const notesSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    imageUrl:{
+        type:String
+    },
     creatredAt: {
         type: Date,
         default: Date.now

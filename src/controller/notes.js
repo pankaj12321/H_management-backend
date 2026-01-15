@@ -3,7 +3,11 @@ const Notes = require("../models/notes");
 const asyncHandler = require("express-async-handler");
 const { entityIdGenerator } = require("../utils/entityGenerator")
 
-
+const getBaseUrl = (req) => {
+    const protocol = (req.headers['x-forwarded-proto'] || req.protocol).split(',')[0].trim();
+    const host = (req.headers['x-forwarded-host'] || req.get('host')).split(',')[0].trim();
+    return `${protocol}://${host}`;
+};
 
 const createNotes = asyncHandler(async (req, res) => {
     try {
@@ -14,12 +18,16 @@ const createNotes = asyncHandler(async (req, res) => {
                 message: "Forbidden! You are not authorized to create notes.",
             });
         }
-
+        let imageUrl=null;
+        if(req.file){
+            imageUrl= `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
+        }
         const payload = req.body;
         const notesId = entityIdGenerator("Notes")
         const notes = await Notes.create({
             notesId,
-            ...payload
+            ...payload,
+            imageUrl:imageUrl
         });
         await notes.save();
         res.status(201).json(notes);
