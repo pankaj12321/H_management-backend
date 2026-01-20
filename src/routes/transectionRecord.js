@@ -83,7 +83,7 @@ router.post('/make/personal/user/transection', verifyToken, upload.single("payme
 router.get('/get/personal/transectional/record', verifyToken, handleToGetPersonalTransectionUserRecordByAdmin)
 
 // routes for personal customer transection
-router.post('/add/personal/customer', verifyToken, handleToCreatePersonalTransectionCustomer)
+router.post('/add/personal/customer', verifyToken,upload.single("profileImg"), handleToCreatePersonalTransectionCustomer)
 
 router.get('/get/personal/customer/users', verifyToken, handleToGetPersonalCustomerListByAdmin)
 router.patch('/update/personal/customer/profile', verifyToken, handleToUpdateThPersonalCustomerProfile)

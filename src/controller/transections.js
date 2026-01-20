@@ -1219,13 +1219,17 @@ const handleToCreatePersonalTransectionCustomer = asyncHandler(async (req, res) 
         if (existingUser) {
             return res.status(409).json({ message: "Personal transection user with this mobile number already exists." });
         }
-
+        let profileImg = null;
+        if (req.file) {
+            profileImg = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
+        }
         const newPersonalTransectionUser = new personalCustomerRecordTran({
             name: payload.name,
             mobile: payload.mobile,
             email: payload.email,
             city: payload.city,
             state: payload.state,
+            profileImg:profileImg,
             personalCustomerRecordTranId: entityIdGenerator("PT"),
             status: 'Active',
             createdAt: Date.now(),

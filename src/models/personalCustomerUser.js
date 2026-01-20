@@ -15,6 +15,10 @@ const personalCustomerRecordTranSchema = new mongoose.Schema({
         type: String,
 
     },
+    profileImg:{
+        type:String
+
+    },
     city: {
         type: String,
     },
