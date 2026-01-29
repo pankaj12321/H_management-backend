@@ -14,6 +14,7 @@ const allowedOrigins = [
   'http://localhost:5000',
   'https://blpoonamhotelandrestaurant.netlify.app',
   'https://hotel-api.duckdns.org',
+  'https://myhotel-api.duckdns.org',
   'http://localhost:3000'
 ];
 
