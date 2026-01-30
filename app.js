@@ -54,12 +54,6 @@ const dynamicCorsMiddleware = (req, res, next) => {
     return next();
   }
 
-  const host = req.get('host');
-
-  if (host && host.includes('hotel-api.duckdns.org')) {
-    return next();
-  }
-
   return cors(corsOptions)(req, res, next);
 };
 
