@@ -44,21 +44,23 @@ const handleToLoginByAdmin = asyncHandler(async (req, res) => {
       (admin) =>
         admin.UserName === UserName &&
         admin.Password === Password &&
-        admin.HBranchName === HBranchName
+        admin.HBranchName.toLowerCase().trim() === HBranchName.toLowerCase().trim()
     );
 
     if (!validAdmin) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    let admin = await Admin.findOne({ UserName, HBranchName });
+    const normalizedBranch = validAdmin.HBranchName;
+
+    let admin = await Admin.findOne({ UserName, HBranchName: normalizedBranch });
 
     if (!admin) {
       admin = await Admin.create({
         adminId: entityIdGenerator("ADMIN"),
         UserName,
         Password,
-        HBranchName,
+        HBranchName: normalizedBranch,
         role: "admin",
       });
     }
