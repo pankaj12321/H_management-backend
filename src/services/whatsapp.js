@@ -1,29 +1,26 @@
-const axios = require("axios");
+const twilio = require('twilio');
 
-const WHATSAPP_BASE_URL = process.env.WHATSAPP_BASE_URL;
-const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
+const { AccountSid, AuthToken } = process.env;
+const client = twilio(AccountSid, AuthToken);
 
-const sendWhatsAppMessage = async (phone, message) => {
+/**
+ * @param {string} toPhoneNumber - The recipient's phone number with the country code (e.g., +11234567890)
+ * @param {string} messageBody - The message body to send
+ * @returns {Promise} - Resolves when the message is sent, rejects if there's an error
+ */
+const sendWhatsAppMessage = async (toPhoneNumber, messageBody) => {
   try {
-    const response = await axios.post(
-      `${WHATSAPP_BASE_URL}/api/send`,
-      { phone, message },
-      {
-        headers: {
-          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
+    const message = await client.messages.create({
+      body: messageBody,
+      from: 'whatsapp:+14155238886', 
+      to: `whatsapp:${toPhoneNumber}` 
+    });
 
-    console.log(response.data)
-    return response.data;
+    console.log(`Message sent successfully to ${toPhoneNumber}: ${message.sid}`);
+    return message; 
   } catch (error) {
-    console.error(
-      "WhatsApp send failed:",
-      error.response?.data || error.message
-    );
-    throw error;
+    console.error('Error sending WhatsApp message:', error);
+    throw error; 
   }
 };
 

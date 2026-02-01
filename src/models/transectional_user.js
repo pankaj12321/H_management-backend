@@ -23,8 +23,7 @@ const transactionalUserSchema = new mongoose.Schema({
         }
     },
     transectionUserId: {
-        type: String,
-        index: true
+        type: String
     },
     status: {
         type: String,

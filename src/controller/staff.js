@@ -98,31 +98,13 @@ const handleToGetStaffListByAdmin = asyncHandler(async (req, res) => {
         if (query.staffId) {
             matchQuery.staffId = query.staffId
         }
-
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
-
-        const staffList = await Staff.find(matchQuery)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean();
-
+        const staffList = await Staff.find(matchQuery).sort({ createdAt: -1 });
         const countStaffDocuments = await Staff.countDocuments(matchQuery);
-
         if (!staffList || staffList.length === 0) {
-            return res.status(404).json({ message: "No staff users found", staffList: [], pagination: { total: 0, page, limit, pages: 0 } });
+            return res.status(404).json({ message: "No staff users found" });
         }
         return res.status(200).json({
-            message: "Staff users fetched successfully",
-            staffList: staffList,
-            pagination: {
-                total: countStaffDocuments,
-                page,
-                limit,
-                pages: Math.ceil(countStaffDocuments / limit)
-            },
+            message: "Staff users fetched successfully", staffList: staffList,
             countStaff: countStaffDocuments
         });
 
@@ -279,7 +261,7 @@ const handleToGetStaffMonthlySalary = asyncHandler(async (req, res) => {
             return res.status(400).json({ message: "staffId, month, and year are required" });
         }
 
-        const staff = await Staff.findOne({ staffId }).lean();
+        const staff = await Staff.findOne({ staffId });
         if (!staff) {
             return res.status(404).json({ message: "Staff not found" });
         }
@@ -292,7 +274,7 @@ const handleToGetStaffMonthlySalary = asyncHandler(async (req, res) => {
             staffId: staffId,
             "attendanceDetails.month": selectedMonth,
             "attendanceDetails.year": selectedYear,
-        }).lean();
+        });
 
         let totalEarnings = 0;
         const attendanceSummary = {
@@ -418,7 +400,7 @@ const handleToGetStaffKhatabook = asyncHandler(async (req, res) => {
         if (!staffId) {
             return res.status(400).json({ message: "staffId is required" });
         }
-        const khatabook = await StaffKhatabook.findOne({ staffId }).lean();
+        const khatabook = await StaffKhatabook.findOne({ staffId });
         if (khatabook == 0) {
             return res.status(404).json({
                 message: "Khatabook not found for this staff",
