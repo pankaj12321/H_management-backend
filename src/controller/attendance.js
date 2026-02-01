@@ -108,12 +108,12 @@ const handleToGetAttendanceOfStaff = async (req, res) => {
     const selectedMonth = month ? parseInt(month) : now.getMonth() + 1;
     const selectedYear = year ? parseInt(year) : now.getFullYear();
 
-    const allStaff = await Staff.find({}, "firstName lastName staffId mobile");
+    const allStaff = await Staff.find({}, "firstName lastName staffId mobile").lean();
 
     const attendanceData = await attendanceRecord.find({
       "attendanceDetails.month": selectedMonth,
       "attendanceDetails.year": selectedYear,
-    });
+    }).lean();
 
     const responseData = allStaff.map((staff) => {
       const staffAttendance = attendanceData.filter(

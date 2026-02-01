@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./src/config/db');
 const routes = require('./src/routes');
+const compression = require('compression');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -61,6 +62,7 @@ console.log('✅ Dynamic CORS initialized. Production host skips Node CORS; Loca
 app.use(dynamicCorsMiddleware);
 app.options(/.*/, dynamicCorsMiddleware);
 
+app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.set('trust proxy', true);

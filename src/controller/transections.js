@@ -81,7 +81,7 @@ const handleToGetTransectionUserListByAdmin = asyncHandler(async (req, res) => {
             matchQuery.transectionUserId = queryParams.transectionUserId;
         }
 
-        const transectionUsers = await TransactionalUser.find(matchQuery).sort({ createdAt: -1 });
+        const transectionUsers = await TransactionalUser.find(matchQuery).sort({ createdAt: -1 }).lean();
 
         return res.status(200).json({ message: "Transection Users fetched successfully", data: transectionUsers });
     } catch (err) {
@@ -282,7 +282,7 @@ const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) =>
                 }
             });
         }
-        const transectionRecord = await TransectionUserRecord.find(matchQuery);
+        const transectionRecord = await TransectionUserRecord.find(matchQuery).lean();
         const countDocuments = await TransectionUserRecord.countDocuments(matchQuery);
 
         if (countDocuments === 0) {
@@ -535,8 +535,8 @@ const handleToGetEarningandExpenseReport = asyncHandler(async (req, res) => {
             });
         }
 
-        const earnings = await Earning.find({ hotelBranchName });
-        const expenses = await Expense.find({ hotelBranchName });
+        const earnings = await Earning.find({ hotelBranchName }).lean();
+        const expenses = await Expense.find({ hotelBranchName }).lean();
 
         const totalEarning = earnings.reduce(
             (sum, e) => sum + Number(e.earningAmount), 0
@@ -685,7 +685,7 @@ const handleToGetTheHotelSupplierPerson = asyncHandler(async (req, res) => {
         }
 
 
-        const suppliers = await Supplier.find(matchQuery).sort({ createdAt: -1 });
+        const suppliers = await Supplier.find(matchQuery).sort({ createdAt: -1 }).lean();
         const supplierCount = suppliers.length;
 
         return res.status(200).json({
@@ -1018,7 +1018,7 @@ const handleToGetPersonalUserByAdmin = asyncHandler(async (req, res) => {
             matchQuery.transectionUserId = queryParams.transectionUserId;
         }
 
-        const transectionUsers = await personalTransectionalUser.find(matchQuery).sort({ createdAt: -1 });
+        const transectionUsers = await personalTransectionalUser.find(matchQuery).sort({ createdAt: -1 }).lean();
 
         return res.status(200).json({ message: "Transection Users fetched successfully", data: transectionUsers });
     } catch (err) {
@@ -1167,7 +1167,7 @@ const handleToGetPersonalTransectionUserRecordByAdmin = asyncHandler(async (req,
         }
 
         const personalTransectionRecord =
-            await personalTransectionUserRecord.findOne(matchQuery);
+            await personalTransectionUserRecord.findOne(matchQuery).lean();
 
         const countDocuments =
             await personalTransectionUserRecord.countDocuments(matchQuery);
@@ -1229,7 +1229,7 @@ const handleToCreatePersonalTransectionCustomer = asyncHandler(async (req, res) 
             email: payload.email,
             city: payload.city,
             state: payload.state,
-            profileImg:profileImg,
+            profileImg: profileImg,
             personalCustomerRecordTranId: entityIdGenerator("PT"),
             status: 'Active',
             createdAt: Date.now(),
@@ -1260,8 +1260,15 @@ const handleToGetPersonalCustomerListByAdmin = asyncHandler(async (req, res) => 
             matchQuery.personalCustomerRecordTranId = query.personalCustomerRecordTranId;
         }
 
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
         const personalTransectionRecord =
-            await personalCustomerRecordTran.find(matchQuery);
+            await personalCustomerRecordTran.find(matchQuery)
+                .skip(skip)
+                .limit(limit)
+                .lean();
 
         const countDocuments =
             await personalCustomerRecordTran.countDocuments(matchQuery);
@@ -1275,6 +1282,12 @@ const handleToGetPersonalCustomerListByAdmin = asyncHandler(async (req, res) => 
         return res.status(200).json({
             message: "Personal customer record fetched successfully",
             data: personalTransectionRecord,
+            pagination: {
+                total: countDocuments,
+                page,
+                limit,
+                pages: Math.ceil(countDocuments / limit)
+            },
             count: countDocuments
         });
 
@@ -1386,8 +1399,15 @@ const handleToGetPersonalCustomerEntryByAdmin = asyncHandler(async (req, res) =>
             matchQuery.personalCustomerRecordTranId = query.personalCustomerRecordTranId;
         }
 
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
         const personalCustomerEntry =
-            await personalCustomerEntries.find(matchQuery);
+            await personalCustomerEntries.find(matchQuery)
+                .skip(skip)
+                .limit(limit)
+                .lean();
 
         const countDocuments =
             await personalCustomerEntries.countDocuments(matchQuery);
@@ -1401,6 +1421,12 @@ const handleToGetPersonalCustomerEntryByAdmin = asyncHandler(async (req, res) =>
         return res.status(200).json({
             message: "Personal customer entry fetched successfully",
             data: personalCustomerEntry,
+            pagination: {
+                total: countDocuments,
+                page,
+                limit,
+                pages: Math.ceil(countDocuments / limit)
+            },
             count: countDocuments
         });
 
@@ -1546,7 +1572,7 @@ const handleToGetKhatabookUserListByAdmin = asyncHandler(async (req, res) => {
             matchQuery.khatabookUserId = queryParams.khatabookUserId;
         }
 
-        const transectionUsers = await khatabookTransectionUser.find(matchQuery).sort({ createdAt: -1 });
+        const transectionUsers = await khatabookTransectionUser.find(matchQuery).sort({ createdAt: -1 }).lean();
 
         return res.status(200).json({ message: "khatabook Users fetched successfully", data: transectionUsers });
     } catch (err) {

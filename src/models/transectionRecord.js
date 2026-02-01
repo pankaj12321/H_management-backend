@@ -30,6 +30,7 @@ const transactionItemSchema = new mongoose.Schema({
 const TransectionUserRecordSchema = mongoose.Schema({
     transectionUserId: {
         type: String,
+        index: true,
     },
 
     givenToAdmin: {

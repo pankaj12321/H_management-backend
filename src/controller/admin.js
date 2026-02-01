@@ -9,6 +9,7 @@ const { deleteToken } = require("../middleware/verifyToken");
 const { entityIdGenerator } = require("../utils/entityGenerator")
 const DriverCommisionEntry = require("../models/driverCommisionEntry");
 const sendWhatsAppMessage = require('../services/whatsapp');
+const redisClient = require('../config/redis');
 
 
 const hotelStaffCredentials = [
@@ -128,6 +129,10 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
 
       });
       await newDriver.save();
+      // Clear cache
+      const keys = await redisClient.keys('all_drivers_*');
+      if (keys.length > 0) await redisClient.del(keys);
+
       res.status(201).json({ message: "Driver added successfully", driver: newDriver });
     }
     else {
@@ -178,6 +183,10 @@ const handleToEditTheDriverProfileByAdmin = asyncHandler(async (req, res) => {
       return res.status(500).json({ message: "Something went wrong! Please try again later." });
     }
 
+    // Clear cache
+    const keys = await redisClient.keys('all_drivers_*');
+    if (keys.length > 0) await redisClient.del(keys);
+
     res.status(200).json({
       message: "Driver profile updated successfully",
       driver: updatedDriver,
@@ -194,28 +203,52 @@ const handleToGetAllDriversByAdmin = asyncHandler(async (req, res) => {
   try {
     const decoded = req.user;
     if (!decoded) {
-      return res
-        .status(403)
-        .json({ message: "Forbidden! You are not authorized to view drivers" });
+      return res.status(403).json({ message: "Forbidden! You are not authorized to view drivers" });
     }
-    const query = req.query
+
+    const { name, carNumber, mobile, page = 1, limit = 10 } = req.query;
+    const cacheKey = `all_drivers_${JSON.stringify(req.query)}`;
+
+    // Check Cache
+    if (redisClient.isOpen) {
+      const cachedData = await redisClient.get(cacheKey);
+      if (cachedData) {
+        return res.status(200).json(JSON.parse(cachedData));
+      }
+    }
+
     let matchQuery = {};
-    if (query.name) {
-      matchQuery.name = query.name
-    }
-    if (query.carNumber) {
-      matchQuery.carNumber = query.carNumber
-    }
-    if (query.mobile) {
-      matchQuery.mobile = query.mobile
+    if (name) matchQuery.name = { $regex: name, $options: "i" };
+    if (carNumber) matchQuery.carNumber = { $regex: carNumber, $options: "i" };
+    if (mobile) matchQuery.mobile = mobile;
+
+    const skip = (page - 1) * limit;
+
+    const drivers = await Driver.find(matchQuery)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
+
+    const totalDrivers = await Driver.countDocuments(matchQuery);
+
+    const responseData = {
+      message: "Drivers fetched successfully",
+      drivers,
+      pagination: {
+        total: totalDrivers,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(totalDrivers / limit)
+      }
+    };
+
+    // Set Cache (expires in 1 hour)
+    if (redisClient.isOpen) {
+      await redisClient.setEx(cacheKey, 3600, JSON.stringify(responseData));
     }
 
-    const drivers = await Driver.find(matchQuery).sort({ createdAt: -1 });
-
-    if (!drivers || drivers.length === 0) {
-      return res.status(200).json({ message: "No drivers found", drivers: [] });
-    }
-    res.status(200).json({ message: "Drivers fetched successfully", drivers: drivers });
+    res.status(200).json(responseData);
   } catch (err) {
     console.error("Error in fetching drivers:", err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -225,12 +258,15 @@ const handleToGetAllDriversByAdmin = asyncHandler(async (req, res) => {
 const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) => {
   try {
     const decoded = req.user;
+
     if (!decoded) {
-      return res
-        .status(403)
-        .json({ message: "Forbidden! You are not authorized to add driver commission entry" });
+      return res.status(403).json({
+        message: "Forbidden! You are not authorized to add driver commission entry"
+      });
     }
+
     const payload = req.body;
+
     if (!payload.driverId) {
       return res.status(400).json({ message: "driverId is required" });
     }
@@ -250,16 +286,23 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
 
     await newEntry.save();
 
-    const messageContent = `Hello, your driver commission entry has been created. Details: 
-    - Driver ID: ${payload.driverId}
-    - Commission Amount: ${payload.driverCommisionAmount || 0}
-    - Party Amount: ${payload.partyAmount || 0}
-    - Status: ${payload.status || "pending"}
-    - Entry Date: ${new Date(payload.entryDate || Date.now()).toLocaleString()}`;
+    // 📲 WhatsApp message content
+    const messageContent = `
+Hello, your driver commission entry has been created.
+
+Driver ID: ${payload.driverId}
+Commission Amount: ${payload.driverCommisionAmount || 0}
+Party Amount: ${payload.partyAmount || 0}
+Status: ${payload.status || "pending"}
+Entry Date: ${new Date(payload.entryDate || Date.now()).toLocaleString()}
+`;
 
     await sendWhatsAppMessage("+918690858238", messageContent);
 
-    res.status(201).json({ message: "Driver commission entry added successfully", entry: newEntry });
+    res.status(201).json({
+      message: "Driver commission entry added successfully",
+      entry: newEntry
+    });
   } catch (err) {
     console.error("Error in adding the entry of driver commission:", err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -283,6 +326,10 @@ const handleToGetListOfDriverCommisionEntriesByAdmin = asyncHandler(async (req, 
     if (query.entryId) {
       matchQuery.entryId = query.entryId;
     }
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
     if (query.startDate && query.endDate) {
       matchQuery.entryDate = { $gte: new Date(query.startDate), $lte: new Date(query.endDate) };
     } else if (query.startDate) {
@@ -291,13 +338,28 @@ const handleToGetListOfDriverCommisionEntriesByAdmin = asyncHandler(async (req, 
       matchQuery.entryDate = { $lte: new Date(query.endDate) };
     }
 
-    const entries = await DriverCommisionEntry.find(matchQuery).sort({ entryDate: -1 });
+    const entries = await DriverCommisionEntry.find(matchQuery)
+      .sort({ entryDate: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const totalEntries = await DriverCommisionEntry.countDocuments(matchQuery);
 
     if (!entries || entries.length === 0) {
-      return res.status(200).json({ message: "No driver commission entries found", entries: [] });
+      return res.status(200).json({ message: "No driver commission entries found", entries: [], pagination: { total: 0, page, limit, pages: 0 } });
     }
 
-    res.status(200).json({ message: "Driver commission entries fetched successfully", entries: entries });
+    res.status(200).json({
+      message: "Driver commission entries fetched successfully",
+      entries: entries,
+      pagination: {
+        total: totalEntries,
+        page,
+        limit,
+        pages: Math.ceil(totalEntries / limit)
+      }
+    });
   } catch (err) {
     console.error("Error in fetching driver commission entries:", err);
     res.status(500).json({ message: "Internal Server Error" });

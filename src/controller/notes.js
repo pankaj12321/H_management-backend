@@ -18,16 +18,16 @@ const createNotes = asyncHandler(async (req, res) => {
                 message: "Forbidden! You are not authorized to create notes.",
             });
         }
-        let imageUrl=null;
-        if(req.file){
-            imageUrl= `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
+        let imageUrl = null;
+        if (req.file) {
+            imageUrl = `${getBaseUrl(req)}/uploads/paymentScreenshots/${req.file.filename}`;
         }
         const payload = req.body;
         const notesId = entityIdGenerator("Notes")
         const notes = await Notes.create({
             notesId,
             ...payload,
-            imageUrl:imageUrl
+            imageUrl: imageUrl
         });
         await notes.save();
         res.status(201).json(notes);
@@ -51,7 +51,7 @@ const getNotes = asyncHandler(async (req, res) => {
         if (query.notesId) {
             matchQuery.notesId = query.notesId
         }
-        const notes = await Notes.find(matchQuery);
+        const notes = await Notes.find(matchQuery).lean();
         res.status(200).json(notes);
     } catch (err) {
         console.error("Error fetching notes:", err);
