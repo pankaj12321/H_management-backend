@@ -241,6 +241,7 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
       driverCommisionAmount: payload.driverCommisionAmount || 0,
       partyAmount: payload.partyAmount || 0,
       status: payload.status || "pending",
+      foodTaken: payload.foodTaken,
       branchName: decoded.branch,
       entryDate: payload.entryDate || Date.now(),
       description: payload.description || "",

@@ -36,6 +36,9 @@ const driverCommisionEntrySchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    foodTaken: {
+      type: Boolean,
+    },
     status: {
       type: String,
     },
