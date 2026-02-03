@@ -258,7 +258,7 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
     - Status: ${payload.status || "pending"}
     - Entry Date: ${new Date(payload.entryDate || Date.now()).toLocaleString()}`;
 
-    await sendWhatsAppMessage("+918690858238", messageContent);
+    // await sendWhatsAppMessage("+918690858238", messageContent);
 
     res.status(201).json({ message: "Driver commission entry added successfully", entry: newEntry });
   } catch (err) {
