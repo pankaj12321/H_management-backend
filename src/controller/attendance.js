@@ -229,8 +229,7 @@ const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
       });
     }
 
-    // ✅ CORRECT UPDATE (object-based)
-    const updatedAttendance = await attendanceRecord.findOneAndUpdate(
+    let updatedAttendance = await attendanceRecord.findOneAndUpdate(
       {
         staffId,
         "attendanceDetails.date": date,
@@ -251,10 +250,36 @@ const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
       { new: true }
     );
 
+    // If record doesn't exist, create it (Backfill)
     if (!updatedAttendance) {
-      return res.status(404).json({
-        message: "Attendance record not found.",
+      const staffDetails = await Staff.findOne({ staffId });
+      if (!staffDetails) {
+        return res.status(404).json({
+          message: "Staff not found! Cannot mark attendance.",
+        });
+      }
+
+      updatedAttendance = new attendanceRecord({
+        staffId: staffDetails.staffId,
+        attendanceDetails: {
+          firstName: staffDetails.firstName,
+          lastName: staffDetails.lastName,
+          mobile: staffDetails.mobile,
+          addharNumber: staffDetails.adharNumber,
+          attendance: attendance,
+          date: date,
+          month: month,
+          year: year,
+          time: new Date().toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "Asia/Kolkata",
+          }),
+        },
+        attendanceStatus: "Marked By Admin",
       });
+
+      await updatedAttendance.save();
     }
 
     // Format updatedAt for UI
