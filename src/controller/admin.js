@@ -8,7 +8,7 @@ const { createTokenHandler } = require("../services/authToken");
 const { deleteToken } = require("../middleware/verifyToken");
 const { entityIdGenerator } = require("../utils/entityGenerator")
 const DriverCommisionEntry = require("../models/driverCommisionEntry");
-const sendWhatsAppMessage = require('../services/whatsapp');
+const { sendWhatsAppMessage, sendWhatsAppTemplate } = require('../services/whatsapp');
 
 
 const hotelStaffCredentials = [
@@ -114,25 +114,38 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
     if (existingDriver) {
       return res.status(409).json({ message: "Driver already exists with this SR Number" });
     }
-    if (!existingDriver) {
-      const newDriver = new Driver({
-        driverId: entityIdGenerator("DRIVER"),
-        name: payload.name,
-        carNumber: payload.carNumber,
-        mobile: payload.mobile,
-        email: payload.email,
-        srNumber: payload.srNumber,
-        salary: payload.salary,
-        location: payload.location,
-        addedBy: decoded.user
 
-      });
-      await newDriver.save();
-      res.status(201).json({ message: "Driver added successfully", driver: newDriver });
+    const newDriver = new Driver({
+      driverId: entityIdGenerator("DRIVER"),
+      name: payload.name,
+      carNumber: payload.carNumber,
+      mobile: payload.mobile,
+      email: payload.email,
+      srNumber: payload.srNumber,
+      salary: payload.salary,
+      location: payload.location,
+      addedBy: decoded.user
+    });
+
+    await newDriver.save();
+
+    const templateData = {
+      "name": "bl_poonam_hotel",
+      "language": {
+        "code": "en"
+      },
+      "components": []
+    };
+
+    let response;
+    try {
+      response = await sendWhatsAppTemplate("+91802585835", templateData);
+    } catch (whatsappErr) {
+      console.error("Failed to send WhatsApp template:", whatsappErr);
+      // We still return 201 because the driver was added to the DB
     }
-    else {
-      res.status(500).json({ message: "Something went wrong! Please try again later." });
-    }
+
+    res.status(201).json({ message: "Driver added successfully", driver: newDriver, response });
 
   }
   catch (err) {
@@ -251,14 +264,7 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
 
     await newEntry.save();
 
-    const messageContent = `Hello, your driver commission entry has been created. Details: 
-    - Driver ID: ${payload.driverId}
-    - Commission Amount: ${payload.driverCommisionAmount || 0}
-    - Party Amount: ${payload.partyAmount || 0}
-    - Status: ${payload.status || "pending"}
-    - Entry Date: ${new Date(payload.entryDate || Date.now()).toLocaleString()}`;
 
-    // await sendWhatsAppMessage("+918690858238", messageContent);
 
     res.status(201).json({ message: "Driver commission entry added successfully", entry: newEntry });
   } catch (err) {

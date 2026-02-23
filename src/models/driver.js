@@ -19,12 +19,18 @@ const driverSchema = new mongoose.Schema(
     location: {
       type: String,
     },
+    email: {
+      type: String,
+    },
     srNumber: {
       type: String,
       unique: true,
     },
     salary: {
       type: Number,
+    },
+    addedBy: {
+      type: String,
     },
     createdAt: {
       type: Date,
