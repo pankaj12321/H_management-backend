@@ -139,7 +139,7 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
 
     let response;
     try {
-      response = await sendWhatsAppTemplate("+918302585835", templateData);
+      response = await sendWhatsAppTemplate(`+91${newDriver.mobile}`, templateData);
     } catch (whatsappErr) {
       console.error("Failed to send WhatsApp template:", whatsappErr);
       // We still return 201 because the driver was added to the DB
