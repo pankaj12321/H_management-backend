@@ -9,6 +9,7 @@ const { deleteToken } = require("../middleware/verifyToken");
 const { entityIdGenerator } = require("../utils/entityGenerator")
 const DriverCommisionEntry = require("../models/driverCommisionEntry");
 const { sendWhatsAppMessage, sendWhatsAppTemplate } = require('../services/whatsapp');
+const { formatIndianPhone } = require("../utils/formatIndianphone");
 
 
 const hotelStaffCredentials = [
@@ -129,21 +130,12 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
 
     await newDriver.save();
 
-    const templateData = {
-      "name": "bl_poonam_hotel",
-      "language": {
-        "code": "en"
-      },
-      "components": []
-    };
+    const phone = formatIndianPhone(newDriver.mobile);
+    console.log(phone);
 
-    let response;
-    try {
-      response = await sendWhatsAppTemplate(`+91${newDriver.mobile}`, templateData);
-    } catch (whatsappErr) {
-      console.error("Failed to send WhatsApp template:", whatsappErr);
-      // We still return 201 because the driver was added to the DB
-    }
+    const message = `Hello ${newDriver.name},\n\nYou have been successfully registered as a driver at ${decoded.branch || "our hotel"}.\nSR Number: ${newDriver.srNumber}\n\nWe look forward to a great association with you!`;
+    const response = await sendWhatsAppMessage(phone, message);
+    console.log(response);
 
     res.status(201).json({ message: "Driver added successfully", driver: newDriver, response });
 
@@ -248,9 +240,18 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
       return res.status(400).json({ message: "driverId is required" });
     }
 
+    const driverDetails = await Driver.findOne({ driverId: payload.driverId });
+    if (!driverDetails) {
+      return res.status(404).json({ message: "Driver not found" });
+    }
+
     const newEntry = new DriverCommisionEntry({
       entryId: entityIdGenerator("DCE"),
       driverId: payload.driverId,
+      driverName: driverDetails.name,
+      carNumber: driverDetails.carNumber,
+      mobile: driverDetails.mobile,
+      srNumber: driverDetails.srNumber,
       driverCommisionAmount: payload.driverCommisionAmount || 0,
       partyAmount: payload.partyAmount || 0,
       status: payload.status || "pending",
@@ -264,9 +265,23 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
 
     await newEntry.save();
 
+    // Send WhatsApp Message
+    let response
+    try {
+      if (newEntry.mobile) {
+        const phone = formatIndianPhone(newEntry.mobile);
+        const branch = newEntry.branchName || "Blpoonam";
+        const message = `Hello!\n\nA new commission entry has been recorded for you at ${branch}.\n\nParty Bill: ${newEntry.partyAmount}\nYour Commission: ${newEntry.driverCommisionAmount}\nStatus: ${newEntry.status}\n\nThank you for your service and we look forward to seeing you again!\n\nVisit Again`;
 
+        response = await sendWhatsAppMessage(phone, message);
+        console.log("WhatsApp Response:", response);
+      }
+    } catch (wsError) {
+      console.error("Error sending WhatsApp message for commission entry:", wsError);
+      // We don't want to fail the request if WhatsApp fails
+    }
 
-    res.status(201).json({ message: "Driver commission entry added successfully", entry: newEntry });
+    res.status(201).json({ message: "Driver commission entry added successfully", entry: newEntry, response });
   } catch (err) {
     console.error("Error in adding the entry of driver commission:", err);
     res.status(500).json({ message: "Internal Server Error" });

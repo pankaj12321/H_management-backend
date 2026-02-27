@@ -1,54 +1,117 @@
-const axios = require('axios');
+const axios = require("axios");
 
 /**
- * @param {string} toPhoneNumber - The recipient's phone number with the country code (e.g., +919829699891)
- * @param {Object} templateData - The template data object
- * @returns {Promise} - Resolves when the message is sent, rejects if there's an error
+ * Send WhatsApp Template via Whinta
+ * @param {string} phone - with country code (+91XXXXXXXXXX)
+ * @param {string} templateName - approved template name
+ * @param {string} languageCode - template language (ex: en)
+ * @param {Array} bodyParams - array of text variables for {{1}}, {{2}} etc.
  */
-const sendWhatsAppTemplate = async (toPhoneNumber, templateData) => {
-  const { WHINTA_API_TOKEN, WHINTA_BASE_URL, WHINTA_TEMPLATE_NAME, WHINTA_TEMPLATE_LANG } = process.env;
 
-  if (!WHINTA_API_TOKEN) {
-    console.error("WHINTA_API_TOKEN is not defined in .env");
-  }
-
+const sendWhatsAppTemplate = async (
+  phone,
+  templateName,
+  languageCode = "en",
+  bodyParams = []
+) => {
   try {
-    const data = JSON.stringify({
-      "phone": toPhoneNumber,
-      "template": {
-        "name": WHINTA_TEMPLATE_NAME || templateData.name || "car_insurance",
-        "language": {
-          "code": WHINTA_TEMPLATE_LANG || (templateData.language && templateData.language.code) || "en"
-        },
-        "components": templateData.components
-      }
-    });
+    const { WHINTA_API_TOKEN, WHINTA_BASE_URL } = process.env;
 
-    const config = {
-      method: 'post',
-      maxBodyLength: Infinity,
-      url: `${WHINTA_BASE_URL || 'https://app.whinta.com'}/api/send/template`,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${WHINTA_API_TOKEN || 'u1B0nET738Mx5dl6yYIgj88ZAe7aoqCmLEgtyACb'}`
-      },
-      data: data
+    if (!WHINTA_API_TOKEN || !WHINTA_BASE_URL) {
+      throw new Error("Whinta environment variables missing");
+    }
+
+    const components = [];
+
+    // If template has body variables
+    if (bodyParams.length > 0) {
+      components.push({
+        type: "body",
+        parameters: bodyParams.map((param) => ({
+          type: "text",
+          text: String(param)
+        }))
+      });
+    }
+
+    const payload = {
+      messaging_product: "whatsapp",
+      to: phone,
+      phone: phone, // Keep phone for backward compatibility if needed
+      type: "template",
+      template: {
+        name: templateName,
+        language: { code: languageCode },
+        components
+      }
     };
 
-    const response = await axios(config);
-    console.log(response.data)
-    const isSuccess = response.data && (response.data.success === true || (response.data.data && response.data.data.success === true));
+    console.log("📤 Sending WhatsApp Template:", JSON.stringify(payload, null, 2));
 
-    if (isSuccess) {
-      console.log(`✅ Whinta template sent successfully to ${toPhoneNumber}`);
-    } else {
-      console.error(`❌ Whinta template failed for ${toPhoneNumber}:`, JSON.stringify(response.data));
-    }
+    const response = await axios.post(
+      `${WHINTA_BASE_URL}/api/send/template`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${WHINTA_API_TOKEN}`
+        }
+      }
+    );
+
+    console.log("✅ WhatsApp Sent:", response.data);
     return response.data;
+
   } catch (error) {
-    console.error('Error sending Whinta WhatsApp template:', error.response ? error.response.data : error.message);
+    console.error(
+      "❌ WhatsApp Error:",
+      error.response ? error.response.data : error.message
+    );
+    throw error;
+  }
+};
+/**
+ * Send Direct WhatsApp Message via Whinta
+ * @param {string} phone - with country code (+91XXXXXXXXXX)
+ * @param {string} message - free text message
+ */
+const sendWhatsAppMessage = async (phone, message) => {
+  try {
+    const { WHINTA_API_TOKEN, WHINTA_BASE_URL } = process.env;
+
+    if (!WHINTA_API_TOKEN || !WHINTA_BASE_URL) {
+      throw new Error("Whinta environment variables missing");
+    }
+
+    const payload = {
+      phone: phone,
+      message: message
+    };
+
+    console.log("📤 Sending Direct WhatsApp (Simplified):", JSON.stringify(payload, null, 2));
+
+    const response = await axios.post(
+      `${WHINTA_BASE_URL}/api/send`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          Authorization: `Bearer ${WHINTA_API_TOKEN}`
+        }
+      }
+    );
+
+    console.log("✅ WhatsApp Sent:", response.data);
+    return response.data;
+
+  } catch (error) {
+    console.error(
+      "❌ WhatsApp Error:",
+      error.response ? error.response.data : error.message
+    );
     throw error;
   }
 };
 
-module.exports = { sendWhatsAppTemplate };
+module.exports = { sendWhatsAppTemplate, sendWhatsAppMessage };
