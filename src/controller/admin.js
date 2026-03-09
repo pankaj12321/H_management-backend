@@ -131,10 +131,10 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
     await newDriver.save();
 
     const phone = formatIndianPhone(newDriver.mobile);
-    console.log(phone);
+    const templateName = process.env.WHINTA_DRIVER_WELCOME_TEMPLATE || "driver_welcome";
 
-    const message = `Hello ${newDriver.name},\n\nYou have been successfully registered as a driver at ${decoded.branch || "our hotel"}.\nSR Number: ${newDriver.srNumber}\n\nWe look forward to a great association with you!`;
-    const response = await sendWhatsAppMessage(phone, message);
+    // Template variables: none provided for welcome message in your text
+    const response = await sendWhatsAppTemplate(phone, templateName, "en", []);
     console.log(response);
 
     res.status(201).json({ message: "Driver added successfully", driver: newDriver, response });
@@ -265,20 +265,30 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
 
     await newEntry.save();
 
-    // Send WhatsApp Message
+    // Send WhatsApp Message using Template
     let response
     try {
       if (newEntry.mobile) {
         const phone = formatIndianPhone(newEntry.mobile);
-        const branch = newEntry.branchName || "Blpoonam";
-        const message = `Hello!\n\nA new commission entry has been recorded for you at ${branch}.\n\nParty Bill: ${newEntry.partyAmount}\nYour Commission: ${newEntry.driverCommisionAmount}\nStatus: ${newEntry.status}\n\nThank you for your service and we look forward to seeing you again!\n\nVisit Again`;
+        const templateName = process.env.WHINTA_COMMISSION_TEMPLATE || "bl_poonam_hotel";
 
-        response = await sendWhatsAppMessage(phone, message);
-        console.log("WhatsApp Response:", response);
+        // Template variables for bl_poonam_hotel:
+        // {{1}} -> Branch/Hotel Name
+        // {{2}} -> Party Bill
+        // {{3}} -> Commission
+        // {{4}} -> Status
+        const bodyParams = [
+          newEntry.branchName || "Blpoonam",
+          newEntry.partyAmount || 0,
+          newEntry.driverCommisionAmount || 0,
+          newEntry.status || "pending"
+        ];
+
+        response = await sendWhatsAppTemplate(phone, templateName, "en", bodyParams);
+        console.log("WhatsApp Template Response:", response);
       }
     } catch (wsError) {
-      console.error("Error sending WhatsApp message for commission entry:", wsError);
-      // We don't want to fail the request if WhatsApp fails
+      console.error("Error sending WhatsApp template for commission entry:", wsError);
     }
 
     res.status(201).json({ message: "Driver commission entry added successfully", entry: newEntry, response });
