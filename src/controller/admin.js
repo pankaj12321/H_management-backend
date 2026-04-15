@@ -265,33 +265,8 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
 
     await newEntry.save();
 
-    // Send WhatsApp Message using Template
-    let response
-    try {
-      if (newEntry.mobile) {
-        const phone = formatIndianPhone(newEntry.mobile);
-        const templateName = process.env.WHINTA_COMMISSION_TEMPLATE || "bl_poonam_hotel";
+    res.status(201).json({ message: "Driver commission entry added successfully", entry: newEntry });
 
-        // Template variables for bl_poonam_hotel:
-        // {{1}} -> Branch/Hotel Name
-        // {{2}} -> Party Bill
-        // {{3}} -> Commission
-        // {{4}} -> Status
-        const bodyParams = [
-          newEntry.branchName || "Blpoonam",
-          newEntry.partyAmount || 0,
-          newEntry.driverCommisionAmount || 0,
-          newEntry.status || "pending"
-        ];
-
-        response = await sendWhatsAppTemplate(phone, templateName, "en", bodyParams);
-        console.log("WhatsApp Template Response:", response);
-      }
-    } catch (wsError) {
-      console.error("Error sending WhatsApp template for commission entry:", wsError);
-    }
-
-    res.status(201).json({ message: "Driver commission entry added successfully", entry: newEntry, response });
   } catch (err) {
     console.error("Error in adding the entry of driver commission:", err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -374,9 +349,36 @@ const handleToEditDriverCommisionEntryByAdmin = asyncHandler(async (req, res) =>
       return res.status(500).json({ message: "Something went wrong! Please try again later." });
     }
 
+    // Send WhatsApp Message using Template
+    let response
+    try {
+      if (updatedEntry.mobile) {
+        const phone = formatIndianPhone(updatedEntry.mobile);
+        const templateName = process.env.WHINTA_COMMISSION_TEMPLATE || "bl_poonam_hotel";
+
+        // Template variables for bl_poonam_hotel:
+        // {{1}} -> Branch/Hotel Name
+        // {{2}} -> Party Bill
+        // {{3}} -> Commission
+        // {{4}} -> Status
+        const bodyParams = [
+          updatedEntry.branchName || "Blpoonam",
+          updatedEntry.partyAmount || 0,
+          updatedEntry.driverCommisionAmount || 0,
+          updatedEntry.status || "pending"
+        ];
+
+        response = await sendWhatsAppTemplate(phone, templateName, "en", bodyParams);
+        console.log("WhatsApp Template Response:", response);
+      }
+    } catch (wsError) {
+      console.error("Error sending WhatsApp template for commission entry:", wsError);
+    }
+
     res.status(200).json({
       message: "Driver commission entry updated successfully",
       entry: updatedEntry,
+      response
     });
 
   } catch (err) {
