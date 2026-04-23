@@ -75,7 +75,7 @@ const handleToLoginByAdmin = asyncHandler(async (req, res) => {
         role: "admin",
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "30d" }
     );
 
     res.status(200).json({

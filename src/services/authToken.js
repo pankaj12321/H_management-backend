@@ -11,7 +11,7 @@ const createTokenHandler = (user) => {
     mobile: user.mobile
   };
   return jwt.sign(payload, process.env.TOKEN_SECRET_KEY, {
-    expiresIn: "5d"
+    expiresIn: "30d"
   });
 };
 
