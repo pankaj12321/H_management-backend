@@ -312,14 +312,54 @@ const handleToUpdateTheAttendanceOfStaffByAdmin = async (req, res) => {
 };
 
 
+const autoMarkStaffPresent = async () => {
+  try {
+    const allStaff = await Staff.find({});
+    const now = new Date();
+    const istDate = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const currentDate = istDate.getDate();
+    const currentMonth = istDate.getMonth() + 1;
+    const currentYear = istDate.getFullYear();
 
+    console.log(`[Cron Job] Starting auto-marking attendance for ${currentDate}/${currentMonth}/${currentYear}`);
+
+    for (const staff of allStaff) {
+      const existingAttendance = await attendanceRecord.findOne({
+        staffId: staff.staffId,
+        "attendanceDetails.date": currentDate,
+        "attendanceDetails.month": currentMonth,
+        "attendanceDetails.year": currentYear,
+      });
+
+      if (!existingAttendance) {
+        const attendanceData = new attendanceRecord({
+          staffId: staff.staffId,
+          attendanceDetails: {
+            firstName: staff.firstName,
+            lastName: staff.lastName,
+            mobile: staff.mobile,
+            addharNumber: staff.adharNumber,
+            attendance: "Present",
+            date: currentDate,
+            month: currentMonth,
+            year: currentYear,
+            time: "00:00:01 AM", // Set to start of day
+          },
+          attendanceStatus: "Marked",
+        });
+        await attendanceData.save();
+      }
+    }
+    console.log(`[Cron Job] Auto-marking attendance completed.`);
+  } catch (err) {
+    console.error("Error in auto-marking staff attendance:", err);
+  }
+};
 
 
 module.exports = {
   handleToMarkAttendanceOfStaff,
   handleToGetAttendanceOfStaff,
-  handleToUpdateTheAttendanceOfStaffByAdmin
+  handleToUpdateTheAttendanceOfStaffByAdmin,
+  autoMarkStaffPresent
 }
-
-
-

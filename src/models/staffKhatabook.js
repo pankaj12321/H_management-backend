@@ -18,6 +18,9 @@ const staffKhatabookItemSchema = new mongoose.Schema({
     returnDate: {
         type: Date
     },
+    givenDate: {
+        type: Date
+    },
     hotelBranchName: {
         type: String,
     },
@@ -33,6 +36,7 @@ const staffKhatabookTransectionRecordSchema = mongoose.Schema({
         required: true,
         unique: true
     },
+
 
     givenToAdmin: {
         type: [staffKhatabookItemSchema],
