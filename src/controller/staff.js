@@ -339,10 +339,14 @@ const handleToAddStaffTransaction = asyncHandler(async (req, res) => {
             return res.status(403).json({ message: "Forbidden: Unauthorized access" });
         }
 
-        const { staffId, Rs, paymentMode, description, type, hotelBranchName, billno, returnDate } = req.body;
+        const { staffId, Rs, paymentMode, description, type, givenDate, hotelBranchName, billno, returnDate } = req.body;
 
         if (!staffId || !Rs || !type) {
             return res.status(400).json({ message: "staffId, Rs, and type (given/taken) are required" });
+        }
+        const existingStaff = await Staff.findOne({ staffId });
+        if (!existingStaff) {
+            return res.status(404).json({ message: "Staff user not found" });
         }
 
         const baseUrl = `${req.protocol}://${req.get("host")}`;
@@ -356,6 +360,7 @@ const handleToAddStaffTransaction = asyncHandler(async (req, res) => {
             paymentMode,
             description,
             paymentScreenshoot,
+            givenDate,
             billno,
             returnDate,
             hotelBranchName,
