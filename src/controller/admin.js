@@ -16,7 +16,7 @@ const hotelStaffCredentials = [
   {
     id: 1,
     UserName: "Blpoonamhotel",
-    Password: "Blpoonamhotel1234",
+    Password: "Blpoonamhotel1235",
     HBranchName: "Blpoonam",
   },
   {
