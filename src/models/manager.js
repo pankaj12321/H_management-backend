@@ -21,6 +21,7 @@ const managerSchema = new Schema(
     Password: {
       type: String,
       required: true,
+      unique: true,
     },
     HBranchName: {
       type: String,
