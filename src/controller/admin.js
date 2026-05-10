@@ -18,19 +18,19 @@ const hotelStaffCredentials = [
   {
     id: 1,
     UserName: "Blpoonamhotel",
-    Password: "Blpoonamhotel1235",
+    Password: "Blpoonamhotel1234",
     HBranchName: "Blpoonam",
   },
   {
     id: 2,
     UserName: "Blpoonamhotel",
-    Password: "Blpoonamhotel1235",
+    Password: "Blpoonamhotel1234",
     HBranchName: "Newpoonam",
   },
   {
     id: 3,
     UserName: "Blpoonamhotel",
-    Password: "Blpoonamhotel1235",
+    Password: "Blpoonamhotel1234",
     HBranchName: "Poonam",
   },
 ];
