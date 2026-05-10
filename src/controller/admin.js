@@ -122,24 +122,41 @@ const handleToLoginByManager = asyncHandler(async (req, res) => {
     }
 
     const normalizedBranch = validAdmin.HBranchName;
+    const normalizedMobile = formatIndianPhone(mobileNumber);
 
-    let manager = await Manager.findOne({ mobileNumber, HBranchName: normalizedBranch });
+    // Check if this mobile number is blocked globally (across any branch)
+    const globallyBlocked = await Manager.findOne({ mobileNumber: normalizedMobile, isBlocked: true });
+    
+    if (globallyBlocked) {
+      return res.status(403).json({ 
+        message: "Aapka mobile number block kar diya gaya hai. Kripya owner se sampark karein." 
+      });
+    }
+
+    let manager = await Manager.findOne({ mobileNumber: normalizedMobile });
 
     if (!manager) {
       manager = await Manager.create({
         managerId: entityIdGenerator("MGR"),
-        managerName,
-        mobileNumber,
+        managerName: managerName.trim(),
+        mobileNumber: normalizedMobile,
         UserName,
         Password,
         HBranchName: normalizedBranch,
         role: "manager",
         isBlocked: false
       });
+    } else {
+      // If manager exists, update their details for the current login session
+      manager.managerName = managerName.trim();
+      manager.HBranchName = normalizedBranch;
+      manager.UserName = UserName;
+      manager.Password = Password;
+      await manager.save();
     }
 
     if (manager.isBlocked) {
-      return res.status(403).json({ message: "Your account is blocked. Please contact the owner." });
+      return res.status(403).json({ message: "Aapka account block kar diya gaya hai. Kripya owner se sampark karein." });
     }
 
     const token = jwt.sign(
