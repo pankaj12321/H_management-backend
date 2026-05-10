@@ -10,6 +10,8 @@ const { entityIdGenerator } = require("../utils/entityGenerator")
 const DriverCommisionEntry = require("../models/driverCommisionEntry");
 const { sendWhatsAppMessage, sendWhatsAppTemplate } = require('../services/whatsapp');
 const { formatIndianPhone } = require("../utils/formatIndianphone");
+const Manager = require("../models/manager");
+
 
 
 const hotelStaffCredentials = [
@@ -99,6 +101,128 @@ const handleToLoginByAdmin = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+const handleToLoginByManager = asyncHandler(async (req, res) => {
+  try {
+    const { UserName, Password, HBranchName, managerName, mobileNumber } = req.body;
+
+    if (!UserName || !Password || !HBranchName || !managerName || !mobileNumber) {
+      return res.status(400).json({ message: "All fields are required (UserName, Password, HBranchName, managerName, mobileNumber)" });
+    }
+
+    const validAdmin = hotelStaffCredentials.find(
+      (admin) =>
+        admin.UserName === UserName &&
+        admin.Password === Password &&
+        admin.HBranchName.toLowerCase().trim() === HBranchName.toLowerCase().trim()
+    );
+
+    if (!validAdmin) {
+      return res.status(401).json({ message: "Invalid branch credentials" });
+    }
+
+    const normalizedBranch = validAdmin.HBranchName;
+
+    let manager = await Manager.findOne({ mobileNumber, HBranchName: normalizedBranch });
+
+    if (!manager) {
+      manager = await Manager.create({
+        managerId: entityIdGenerator("MGR"),
+        managerName,
+        mobileNumber,
+        UserName,
+        Password,
+        HBranchName: normalizedBranch,
+        role: "manager",
+        isBlocked: false
+      });
+    }
+
+    if (manager.isBlocked) {
+      return res.status(403).json({ message: "Your account is blocked. Please contact the owner." });
+    }
+
+    const token = jwt.sign(
+      {
+        managerId: manager.managerId,
+        user: manager.UserName,
+        branch: manager.HBranchName,
+        name: manager.managerName,
+        mobile: manager.mobileNumber,
+        role: "manager",
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "30d" }
+    );
+
+    res.status(200).json({
+      message: "Login successful",
+      user: {
+        managerName: manager.managerName,
+        mobileNumber: manager.mobileNumber,
+        HBranchName: manager.HBranchName,
+        role: "manager",
+        token,
+      },
+    });
+  } catch (err) {
+    console.error("Error in Manager Login:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+const handleToGetAllManagers = asyncHandler(async (req, res) => {
+  try {
+    const decoded = req.user;
+    if (!decoded || decoded.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized! Only owner can see managers list" });
+    }
+
+    const managers = await Manager.find({ HBranchName: decoded.branch }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: "Managers fetched successfully",
+      managers
+    });
+  } catch (err) {
+    console.error("Error in fetching managers:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+const handleToBlockUnblockManager = asyncHandler(async (req, res) => {
+  try {
+    const decoded = req.user;
+    if (!decoded || decoded.role !== "admin") {
+      return res.status(403).json({ message: "Unauthorized! Only owner can block/unblock managers" });
+    }
+
+    const { managerId, isBlocked } = req.body;
+
+    if (!managerId || isBlocked === undefined) {
+      return res.status(400).json({ message: "managerId and isBlocked status are required" });
+    }
+
+    const updatedManager = await Manager.findOneAndUpdate(
+      { managerId },
+      { $set: { isBlocked } },
+      { new: true }
+    );
+
+    if (!updatedManager) {
+      return res.status(404).json({ message: "Manager not found" });
+    }
+
+    res.status(200).json({
+      message: `Manager ${isBlocked ? 'blocked' : 'unblocked'} successfully`,
+      manager: updatedManager
+    });
+  } catch (err) {
+    console.error("Error in blocking/unblocking manager:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
   try {
     const decoded = req.user;
@@ -397,5 +521,8 @@ module.exports = {
   handleToAddTheDriverCommisionEntryByAdmin,
   handleToGetListOfDriverCommisionEntriesByAdmin,
   handleToEditDriverCommisionEntryByAdmin,
-  handleToEditTheDriverProfileByAdmin
+  handleToEditTheDriverProfileByAdmin,
+  handleToLoginByManager,
+  handleToGetAllManagers,
+  handleToBlockUnblockManager
 };
