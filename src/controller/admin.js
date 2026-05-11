@@ -272,10 +272,17 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
     await newDriver.save();
 
     const phone = formatIndianPhone(newDriver.mobile);
-    const templateName = process.env.WHINTA_DRIVER_WELCOME_TEMPLATE || "driver_welcome";
+    const templateName = "hello"; // Updated to your 'hello' template
 
-    // Template variables: none provided for welcome message in your text
-    const response = await sendWhatsAppTemplate(phone, templateName, "en", []);
+    // Template variables for 'hello' template:
+    // {{1}} -> Driver Name
+    // {{2}} -> Driver Mobile
+    const bodyParams = [
+      newDriver.name,
+      newDriver.mobile
+    ];
+
+    const response = await sendWhatsAppTemplate(phone, templateName, "en", bodyParams);
     console.log(response);
 
     res.status(201).json({ message: "Driver added successfully", driver: newDriver, response });
@@ -497,14 +504,12 @@ const handleToEditDriverCommisionEntryByAdmin = asyncHandler(async (req, res) =>
         const phone = formatIndianPhone(updatedEntry.mobile);
         const templateName = process.env.WHINTA_COMMISSION_TEMPLATE || "bl_poonam_hotel";
 
-        // Template variables for bl_poonam_hotel:
-        // {{1}} -> Branch/Hotel Name
-        // {{2}} -> Party Bill
-        // {{3}} -> Commission
-        // {{4}} -> Status
+        // Template variables for the new structure:
+        // {{1}} -> Branch Name
+        // {{2}} -> Driver Commission Amount
+        // {{3}} -> Status
         const bodyParams = [
           updatedEntry.branchName || "Blpoonam",
-          updatedEntry.partyAmount || 0,
           updatedEntry.driverCommisionAmount || 0,
           updatedEntry.status || "pending"
         ];
