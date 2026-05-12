@@ -46,8 +46,12 @@ const attendanceSchema = new mongoose.Schema({
     },
 },
     { timestamps: true }
+);
 
-)
+attendanceSchema.index({ staffId: 1 });
+attendanceSchema.index({ "attendanceDetails.month": 1, "attendanceDetails.year": 1 });
+attendanceSchema.index({ "attendanceDetails.date": 1, "attendanceDetails.month": 1, "attendanceDetails.year": 1 });
+attendanceSchema.index({ createdAt: -1 });
 
 const attendanceRecord = mongoose.model('attendance', attendanceSchema);
 module.exports = {

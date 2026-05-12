@@ -351,24 +351,46 @@ const handleToGetAllDriversByAdmin = asyncHandler(async (req, res) => {
         .status(403)
         .json({ message: "Forbidden! You are not authorized to view drivers" });
     }
-    const query = req.query;
+    const { name, carNumber, mobile, page, limit } = req.query;
+    
     let matchQuery = {};
-    if (query.name) {
-      matchQuery.name = query.name
+    if (name) {
+      matchQuery.name = { $regex: name, $options: "i" };
     }
-    if (query.carNumber) {
-      matchQuery.carNumber = query.carNumber
+    if (carNumber) {
+      matchQuery.carNumber = { $regex: carNumber, $options: "i" };
     }
-    if (query.mobile) {
-      matchQuery.mobile = query.mobile
+    if (mobile) {
+      matchQuery.mobile = { $regex: mobile, $options: "i" };
     }
 
-    const drivers = await Driver.find(matchQuery).sort({ createdAt: -1 });
+    let dbQuery = Driver.find(matchQuery).sort({ createdAt: -1 }).lean();
 
-    if (!drivers || drivers.length === 0) {
-      return res.status(200).json({ message: "No drivers found", drivers: [] });
+    if (page && limit) {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      dbQuery = dbQuery.skip(skip).limit(parseInt(limit));
     }
-    res.status(200).json({ message: "Drivers fetched successfully", drivers: drivers });
+
+    const [drivers, totalCount] = await Promise.all([
+      dbQuery,
+      Driver.countDocuments(matchQuery)
+    ]);
+
+    const response = {
+      message: "Drivers fetched successfully",
+      drivers: drivers,
+    };
+
+    if (page && limit) {
+      response.pagination = {
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        currentPage: parseInt(page),
+        pageSize: parseInt(limit)
+      };
+    }
+
+    res.status(200).json(response);
   } catch (err) {
     console.error("Error in fetching drivers:", err);
     res.status(500).json({ message: "Internal Server Error" });
@@ -440,37 +462,58 @@ const handleToGetListOfDriverCommisionEntriesByAdmin = asyncHandler(async (req, 
     if (!decoded) {
       return res.status(403).json({ message: "Forbidden! You are not authorized to view driver commission entries" });
     }
-    const query = req.query;
+    const { driverId, status, entryId, startDate, endDate, page, limit } = req.query;
+    
     let matchQuery = {};
-    if (query.driverId) {
-      matchQuery.driverId = query.driverId;
+    if (driverId) {
+      matchQuery.driverId = driverId;
     }
-    if (query.status) {
-      matchQuery.status = query.status;
+    if (status) {
+      matchQuery.status = status;
     }
-    if (query.entryId) {
-      matchQuery.entryId = query.entryId;
+    if (entryId) {
+      matchQuery.entryId = entryId;
     }
-    if (query.startDate && query.endDate) {
-      matchQuery.entryDate = { $gte: new Date(query.startDate), $lte: new Date(query.endDate) };
-    } else if (query.startDate) {
-      matchQuery.entryDate = { $gte: new Date(query.startDate) };
-    } else if (query.endDate) {
-      matchQuery.entryDate = { $lte: new Date(query.endDate) };
-    }
-
-    const entries = await DriverCommisionEntry.find(matchQuery).sort({ entryDate: -1 });
-
-    if (!entries || entries.length === 0) {
-      return res.status(200).json({ message: "No driver commission entries found", entries: [] });
+    if (startDate && endDate) {
+      matchQuery.entryDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    } else if (startDate) {
+      matchQuery.entryDate = { $gte: new Date(startDate) };
+    } else if (endDate) {
+      matchQuery.entryDate = { $lte: new Date(endDate) };
     }
 
-    res.status(200).json({ message: "Driver commission entries fetched successfully", entries: entries });
+    let dbQuery = DriverCommisionEntry.find(matchQuery).sort({ entryDate: -1 }).lean();
+
+    if (page && limit) {
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      dbQuery = dbQuery.skip(skip).limit(parseInt(limit));
+    }
+
+    const [entries, totalCount] = await Promise.all([
+      dbQuery,
+      DriverCommisionEntry.countDocuments(matchQuery)
+    ]);
+
+    const response = {
+      message: "Driver commission entries fetched successfully",
+      entries: entries,
+    };
+
+    if (page && limit) {
+      response.pagination = {
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / parseInt(limit)),
+        currentPage: parseInt(page),
+        pageSize: parseInt(limit)
+      };
+    }
+
+    res.status(200).json(response);
   } catch (err) {
     console.error("Error in fetching driver commission entries:", err);
     res.status(500).json({ message: "Internal Server Error" });
   }
-})
+});
 
 const handleToEditDriverCommisionEntryByAdmin = asyncHandler(async (req, res) => {
   try {

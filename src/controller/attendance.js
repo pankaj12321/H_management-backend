@@ -108,17 +108,23 @@ const handleToGetAttendanceOfStaff = async (req, res) => {
     const selectedMonth = month ? parseInt(month) : now.getMonth() + 1;
     const selectedYear = year ? parseInt(year) : now.getFullYear();
 
-    const allStaff = await Staff.find({}, "firstName lastName staffId mobile");
+    const [allStaff, attendanceData] = await Promise.all([
+      Staff.find({}, "firstName lastName staffId mobile").lean(),
+      attendanceRecord.find({
+        "attendanceDetails.month": selectedMonth,
+        "attendanceDetails.year": selectedYear,
+      }).lean()
+    ]);
 
-    const attendanceData = await attendanceRecord.find({
-      "attendanceDetails.month": selectedMonth,
-      "attendanceDetails.year": selectedYear,
-    });
+    // Group attendance by staffId for O(1) lookup
+    const attendanceMap = attendanceData.reduce((acc, att) => {
+      if (!acc[att.staffId]) acc[att.staffId] = [];
+      acc[att.staffId].push(att);
+      return acc;
+    }, {});
 
     const responseData = allStaff.map((staff) => {
-      const staffAttendance = attendanceData.filter(
-        (att) => att.staffId === staff.staffId
-      );
+      const staffAttendance = attendanceMap[staff.staffId] || [];
 
       const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
 

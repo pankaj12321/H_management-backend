@@ -74,16 +74,39 @@ const handleToGetTransectionUserListByAdmin = asyncHandler(async (req, res) => {
         if (!decodedToken || decodedToken.role !== 'admin') {
             return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
         }
-        const queryParams = req.query;
+        const { transectionUserId, page, limit } = req.query;
         const matchQuery = {};
 
-        if (queryParams.transectionUserId) {
-            matchQuery.transectionUserId = queryParams.transectionUserId;
+        if (transectionUserId) {
+            matchQuery.transectionUserId = transectionUserId;
         }
 
-        const transectionUsers = await TransactionalUser.find(matchQuery).sort({ createdAt: -1 });
+        let query = TransactionalUser.find(matchQuery).sort({ createdAt: -1 }).lean();
 
-        return res.status(200).json({ message: "Transection Users fetched successfully", data: transectionUsers });
+        if (page && limit) {
+            const skip = (parseInt(page) - 1) * parseInt(limit);
+            query = query.skip(skip).limit(parseInt(limit));
+        }
+
+        const transectionUsers = await query;
+        const totalCount = await TransactionalUser.countDocuments(matchQuery);
+
+        const response = { 
+            message: "Transection Users fetched successfully", 
+            data: transectionUsers,
+            totalCount
+        };
+
+        if (page && limit) {
+            response.pagination = {
+                totalItems: totalCount,
+                totalPages: Math.ceil(totalCount / parseInt(limit)),
+                currentPage: parseInt(page),
+                pageSize: parseInt(limit)
+            };
+        }
+
+        return res.status(200).json(response);
     } catch (err) {
         console.error("Error in fetching Transection Users:", err);
         res.status(500).json({ message: "Internal Server Error" });
@@ -282,7 +305,7 @@ const handleToGetTransectionUserRecordByAdmin = asyncHandler(async (req, res) =>
                 }
             });
         }
-        const transectionRecord = await TransectionUserRecord.find(matchQuery);
+        const transectionRecord = await TransectionUserRecord.find(matchQuery).lean();
         const countDocuments = await TransectionUserRecord.countDocuments(matchQuery);
 
         if (countDocuments === 0) {
@@ -385,13 +408,13 @@ const handleToCalculateTotalTakenAndGivenMoney = async (req, res) => {
         //         message:"Forbidden: invalid token/Unauthorized access"
         //     });
         // }
-        const transectionRecords = await TransectionUserRecord.find({});
+        const transectionRecords = await TransectionUserRecord.find({}).select('totalGiven totalTaken').lean();
         let totalGiven = 0;
         let totalTaken = 0;
 
         transectionRecords.forEach(record => {
-            totalGiven += record.totalGiven;
-            totalTaken += record.totalTaken;
+            totalGiven += record.totalGiven || 0;
+            totalTaken += record.totalTaken || 0;
         })
         return res.status(200).json({
             message: "Total Given and Taken money calculated successfully",
@@ -535,15 +558,17 @@ const handleToGetEarningandExpenseReport = asyncHandler(async (req, res) => {
             });
         }
 
-        const earnings = await Earning.find({ hotelBranchName });
-        const expenses = await Expense.find({ hotelBranchName });
+        const [earnings, expenses] = await Promise.all([
+            Earning.find({ hotelBranchName }).lean(),
+            Expense.find({ hotelBranchName }).lean()
+        ]);
 
         const totalEarning = earnings.reduce(
-            (sum, e) => sum + Number(e.earningAmount), 0
+            (sum, e) => sum + Number(e.earningAmount || 0), 0
         );
 
         const totalExpense = expenses.reduce(
-            (sum, e) => sum + Number(e.expenseAmount), 0
+            (sum, e) => sum + Number(e.expenseAmount || 0), 0
         );
 
         res.status(200).json({
@@ -677,23 +702,39 @@ const handleToGetTheHotelSupplierPerson = asyncHandler(async (req, res) => {
                 message: "Forbidden: invalid token/Unauthorized access"
             });
         }
-        const query = req.query;
+        const { supplierId, page, limit } = req.query;
         let matchQuery = {};
 
-        if (query.supplierId) {
-            matchQuery.supplierId = query.supplierId;
+        if (supplierId) {
+            matchQuery.supplierId = supplierId;
         }
 
+        let dbQuery = Supplier.find(matchQuery).sort({ createdAt: -1 }).lean();
 
-        const suppliers = await Supplier.find(matchQuery).sort({ createdAt: -1 });
-        const supplierCount = suppliers.length;
+        if (page && limit) {
+            const skip = (parseInt(page) - 1) * parseInt(limit);
+            dbQuery = dbQuery.skip(skip).limit(parseInt(limit));
+        }
 
-        return res.status(200).json({
+        const suppliers = await dbQuery;
+        const totalCount = await Supplier.countDocuments(matchQuery);
+
+        const response = {
             message: "Hotel Supplier Persons fetched successfully",
             data: suppliers,
-            count: supplierCount
+            count: totalCount
+        };
 
-        });
+        if (page && limit) {
+            response.pagination = {
+                totalItems: totalCount,
+                totalPages: Math.ceil(totalCount / parseInt(limit)),
+                currentPage: parseInt(page),
+                pageSize: parseInt(limit)
+            };
+        }
+
+        return res.status(200).json(response);
 
     } catch (err) {
         console.error("Error in fetching hotel supplier persons:", err);

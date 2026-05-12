@@ -93,20 +93,42 @@ const handleToGetStaffListByAdmin = asyncHandler(async (req, res) => {
             return res.status(403).json({ message: "Forbidden: invalid token/Unauthorized access" });
         }
         let matchQuery = {};
-        let query = req.query;
+        const { staffId, page, limit } = req.query;
 
-        if (query.staffId) {
-            matchQuery.staffId = query.staffId
+        if (staffId) {
+            matchQuery.staffId = staffId;
         }
-        const staffList = await Staff.find(matchQuery).sort({ createdAt: -1 });
+
+        let query = Staff.find(matchQuery).sort({ createdAt: -1 }).lean();
+
+        if (page && limit) {
+            const skip = (parseInt(page) - 1) * parseInt(limit);
+            query = query.skip(skip).limit(parseInt(limit));
+        }
+
+        const staffList = await query;
         const countStaffDocuments = await Staff.countDocuments(matchQuery);
+
         if (!staffList || staffList.length === 0) {
             return res.status(404).json({ message: "No staff users found" });
         }
-        return res.status(200).json({
-            message: "Staff users fetched successfully", staffList: staffList,
+
+        const response = {
+            message: "Staff users fetched successfully", 
+            staffList: staffList,
             countStaff: countStaffDocuments
-        });
+        };
+
+        if (page && limit) {
+            response.pagination = {
+                totalItems: countStaffDocuments,
+                totalPages: Math.ceil(countStaffDocuments / parseInt(limit)),
+                currentPage: parseInt(page),
+                pageSize: parseInt(limit)
+            };
+        }
+
+        return res.status(200).json(response);
 
     }
     catch (err) {
@@ -405,8 +427,8 @@ const handleToGetStaffKhatabook = asyncHandler(async (req, res) => {
         if (!staffId) {
             return res.status(400).json({ message: "staffId is required" });
         }
-        const khatabook = await StaffKhatabook.findOne({ staffId });
-        if (khatabook == 0) {
+        const khatabook = await StaffKhatabook.findOne({ staffId }).lean();
+        if (!khatabook) {
             return res.status(404).json({
                 message: "Khatabook not found for this staff",
                 khatabook: []

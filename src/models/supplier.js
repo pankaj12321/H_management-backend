@@ -27,5 +27,10 @@ const supplierSchema = new mongoose.Schema({
     { timestamps: true }
 );
 
+supplierSchema.index({ supplierId: 1 });
+supplierSchema.index({ supplierName: 1 });
+supplierSchema.index({ supplierPhone: 1 });
+supplierSchema.index({ createdAt: -1 });
+
 const Supplier = mongoose.model('Supplier', supplierSchema);
 module.exports = Supplier;

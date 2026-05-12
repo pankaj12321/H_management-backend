@@ -51,7 +51,7 @@ const getNotes = asyncHandler(async (req, res) => {
         if (query.notesId) {
             matchQuery.notesId = query.notesId
         }
-        const notes = await Notes.find(matchQuery);
+        const notes = await Notes.find(matchQuery).sort({ createdAt: -1 }).lean();
         res.status(200).json(notes);
     } catch (err) {
         console.error("Error fetching notes:", err);

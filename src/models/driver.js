@@ -44,5 +44,11 @@ const driverSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+driverSchema.index({ driverId: 1 });
+driverSchema.index({ name: 1 });
+driverSchema.index({ carNumber: 1 });
+driverSchema.index({ mobile: 1 });
+driverSchema.index({ createdAt: -1 });
+
 const Driver = mongoose.model("Driver", driverSchema);
 module.exports = Driver;

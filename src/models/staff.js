@@ -82,7 +82,13 @@ const staffSchema = new mongoose.Schema({
 
 },
     { timestamps: true }
-)
+);
+
+staffSchema.index({ staffId: 1 });
+staffSchema.index({ mobile: 1 });
+staffSchema.index({ adharNumber: 1 });
+staffSchema.index({ branchName: 1 });
+staffSchema.index({ createdAt: -1 });
 
 const Staff = new mongoose.model('Staff', staffSchema);
 module.exports = Staff;

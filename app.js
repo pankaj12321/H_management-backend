@@ -1,4 +1,5 @@
 require('dotenv').config();
+const compression = require('compression');
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./src/config/db');
@@ -10,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 
 connectDB();
 initCronJobs();
+app.use(compression());
 
 const allowedOrigins = [
   'http://localhost:4200',

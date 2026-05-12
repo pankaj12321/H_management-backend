@@ -53,5 +53,8 @@ const TransectionUserRecordSchema = mongoose.Schema({
     },
 }, { timestamps: true });
 
+TransectionUserRecordSchema.index({ transectionUserId: 1 });
+TransectionUserRecordSchema.index({ createdAt: -1 });
+
 const TransectionUserRecord = mongoose.model('TransectionUserRecord', TransectionUserRecordSchema);
 module.exports = TransectionUserRecord;

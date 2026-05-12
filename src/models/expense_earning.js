@@ -39,7 +39,10 @@ const expenseSchema = new mongoose.Schema({
     }
 
 
-}, { timestamp: true })
+}, { timestamps: true });
+
+expenseSchema.index({ expenseDate: -1 });
+expenseSchema.index({ dateTime: -1 });
 
 const Expense = mongoose.model('Expense', expenseSchema);
 
@@ -78,7 +81,10 @@ const earningSchema = new mongoose.Schema({
     description: {
         type: String
     }
-}, { timestamp: true })
+}, { timestamps: true });
+
+earningSchema.index({ earningDate: -1 });
+earningSchema.index({ dateTime: -1 });
 
 const Earning = mongoose.model('earning', earningSchema)
 

@@ -24,6 +24,9 @@ const notesSchema = new mongoose.Schema({
 
 }, {
     timestamps: true
-})
+});
+
+notesSchema.index({ notesId: 1 });
+notesSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("Notes", notesSchema);

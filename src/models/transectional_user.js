@@ -39,6 +39,10 @@ const transactionalUserSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+transactionalUserSchema.index({ name: 1 });
+transactionalUserSchema.index({ transectionUserId: 1 });
+transactionalUserSchema.index({ createdAt: -1 });
+
 const TransactionalUser = mongoose.model('TransactionalUser', transactionalUserSchema);
 
 module.exports = TransactionalUser;

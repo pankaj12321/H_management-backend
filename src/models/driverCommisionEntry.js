@@ -57,5 +57,11 @@ const driverCommisionEntrySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+driverCommisionEntrySchema.index({ entryId: 1 });
+driverCommisionEntrySchema.index({ driverId: 1 });
+driverCommisionEntrySchema.index({ status: 1 });
+driverCommisionEntrySchema.index({ entryDate: -1 });
+driverCommisionEntrySchema.index({ createdAt: -1 });
 const DriverCommisionEntry = mongoose.model("DriverCommisionEntry", driverCommisionEntrySchema);
 module.exports = DriverCommisionEntry;

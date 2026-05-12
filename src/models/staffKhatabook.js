@@ -59,5 +59,7 @@ const staffKhatabookTransectionRecordSchema = mongoose.Schema({
     },
 }, { timestamps: true });
 
+staffKhatabookTransectionRecordSchema.index({ createdAt: -1 });
+
 const StaffKhatabook = mongoose.model('StaffKhatabook', staffKhatabookTransectionRecordSchema);
 module.exports = StaffKhatabook;
