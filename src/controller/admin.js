@@ -18,19 +18,19 @@ const hotelStaffCredentials = [
   {
     id: 1,
     UserName: "Blpoonamhotel",
-    Password: "Blpoonamhotel1234",
+    Password: "Blpoonamhotel7740",
     HBranchName: "Blpoonam",
   },
   {
     id: 2,
     UserName: "Blpoonamhotel",
-    Password: "Blpoonamhotel1234",
+    Password: "Blpoonamhotel7740",
     HBranchName: "Newpoonam",
   },
   {
     id: 3,
     UserName: "Blpoonamhotel",
-    Password: "Blpoonamhotel1234",
+    Password: "Blpoonamhotel7740",
     HBranchName: "Poonam",
   },
 ];
@@ -113,7 +113,7 @@ const handleToLoginByManager = asyncHandler(async (req, res) => {
     const validAdmin = hotelStaffCredentials.find(
       (admin) =>
         admin.UserName === UserName &&
-        admin.Password === Password &&
+        Password === "Blpoonamhotel1234" &&
         admin.HBranchName.toLowerCase().trim() === HBranchName.toLowerCase().trim()
     );
 
@@ -126,10 +126,10 @@ const handleToLoginByManager = asyncHandler(async (req, res) => {
 
     // Check if this mobile number is blocked globally (across any branch)
     const globallyBlocked = await Manager.findOne({ mobileNumber: normalizedMobile, isBlocked: true });
-    
+
     if (globallyBlocked) {
-      return res.status(403).json({ 
-        message: "Aapka mobile number block kar diya gaya hai. Kripya owner se sampark karein." 
+      return res.status(403).json({
+        message: "Aapka mobile number block kar diya gaya hai. Kripya owner se sampark karein."
       });
     }
 
@@ -351,7 +351,12 @@ const handleToGetAllDriversByAdmin = asyncHandler(async (req, res) => {
         .status(403)
         .json({ message: "Forbidden! You are not authorized to view drivers" });
     }
+<<<<<<< Updated upstream
     const query = req.query
+=======
+    const { name, carNumber, mobile, page, limit } = req.query;
+
+>>>>>>> Stashed changes
     let matchQuery = {};
     if (query.name) {
       matchQuery.name = query.name
@@ -427,7 +432,12 @@ const handleToGetListOfDriverCommisionEntriesByAdmin = asyncHandler(async (req, 
     if (!decoded) {
       return res.status(403).json({ message: "Forbidden! You are not authorized to view driver commission entries" });
     }
+<<<<<<< Updated upstream
     const query = req.query;
+=======
+    const { driverId, status, entryId, startDate, endDate, page, limit } = req.query;
+
+>>>>>>> Stashed changes
     let matchQuery = {};
     if (query.driverId) {
       matchQuery.driverId = query.driverId;
