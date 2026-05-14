@@ -413,6 +413,19 @@ const handleToAddTheDriverCommisionEntryByAdmin = asyncHandler(async (req, res) 
 
     await newEntry.save();
 
+    // Send WhatsApp notification
+    try {
+      if (newEntry.mobile) {
+        const phone = formatIndianPhone(newEntry.mobile);
+        const templateName = "namste";
+        const bodyParams = []; // Template has no variables based on user input
+
+        await sendWhatsAppTemplate(phone, templateName, "en", bodyParams);
+      }
+    } catch (wsError) {
+      console.error("Error sending WhatsApp for commission entry:", wsError);
+    }
+
     res.status(201).json({ message: "Driver commission entry added successfully", entry: newEntry });
 
   } catch (err) {
