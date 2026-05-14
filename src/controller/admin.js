@@ -351,12 +351,7 @@ const handleToGetAllDriversByAdmin = asyncHandler(async (req, res) => {
         .status(403)
         .json({ message: "Forbidden! You are not authorized to view drivers" });
     }
-<<<<<<< Updated upstream
-    const query = req.query
-=======
-    const { name, carNumber, mobile, page, limit } = req.query;
-
->>>>>>> Stashed changes
+    const query = req.query;
     let matchQuery = {};
     if (query.name) {
       matchQuery.name = query.name
@@ -432,12 +427,7 @@ const handleToGetListOfDriverCommisionEntriesByAdmin = asyncHandler(async (req, 
     if (!decoded) {
       return res.status(403).json({ message: "Forbidden! You are not authorized to view driver commission entries" });
     }
-<<<<<<< Updated upstream
     const query = req.query;
-=======
-    const { driverId, status, entryId, startDate, endDate, page, limit } = req.query;
-
->>>>>>> Stashed changes
     let matchQuery = {};
     if (query.driverId) {
       matchQuery.driverId = query.driverId;
