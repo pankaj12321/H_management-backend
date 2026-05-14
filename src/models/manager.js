@@ -13,6 +13,7 @@ const managerSchema = new Schema(
     mobileNumber: {
       type: String,
       required: true,
+      unique: true,
     },
     UserName: {
       type: String,
@@ -33,14 +34,6 @@ const managerSchema = new Schema(
     role: {
       type: String,
       default: "manager",
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
     },
   },
   { timestamps: true }

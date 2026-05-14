@@ -184,6 +184,15 @@ const handleToLoginByManager = asyncHandler(async (req, res) => {
     });
   } catch (err) {
     console.error("Error in Manager Login:", err);
+
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyPattern || {})[0] || "field";
+      return res.status(409).json({
+        message: `Is ${field} se pahle hi manager exists hai. Kripya check karein.`,
+        error: err.message
+      });
+    }
+
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
