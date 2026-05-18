@@ -281,15 +281,10 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
     await newDriver.save();
 
     const phone = formatIndianPhone(newDriver.mobile);
-    const templateName = "hello"; // Updated to your 'hello' template
+    const templateName = "driver_add_profile"; // Updated to driver_add_profile
 
-    // Template variables for 'hello' template:
-    // {{1}} -> Driver Name
-    // {{2}} -> Driver Mobile
-    const bodyParams = [
-      newDriver.name,
-      newDriver.mobile
-    ];
+    // Template variables for 'driver_add_profile' template: (none required)
+    const bodyParams = [];
 
     const response = await sendWhatsAppTemplate(phone, templateName, "en", bodyParams);
     console.log(response);

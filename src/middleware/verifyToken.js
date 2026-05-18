@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const Manager = require('../models/manager');
 // const redis = require('../config/redis');
 
 
@@ -12,9 +13,21 @@ const verifyToken = (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
         return res.status(403).json({ message: "Invalid or expired token" });
+      }
+
+      if (decoded.role === "manager") {
+        try {
+          const manager = await Manager.findOne({ managerId: decoded.managerId });
+          if (!manager || manager.isBlocked) {
+            return res.status(403).json({ message: "Aapka account block kar diya gaya hai. Kripya owner se sampark karein." });
+          }
+        } catch (dbErr) {
+          console.error("Error checking manager block status:", dbErr);
+          return res.status(500).json({ message: "Internal Server Error" });
+        }
       }
 
       req.user = decoded;
