@@ -3,7 +3,7 @@ const Manager = require('../models/manager');
 // const redis = require('../config/redis');
 
 
-const verifyToken = (req, res, next) => {
+const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers["authorization"];
 
@@ -13,29 +13,39 @@ const verifyToken = (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-      if (err) {
-        return res.status(403).json({ message: "Invalid or expired token" });
-      }
-
-      if (decoded.role === "manager") {
-        try {
-          const manager = await Manager.findOne({ managerId: decoded.managerId });
-          if (!manager || manager.isBlocked) {
-            return res.status(403).json({ message: "Aapka account block kar diya gaya hai. Kripya owner se sampark karein." });
-          }
-        } catch (dbErr) {
-          console.error("Error checking manager block status:", dbErr);
-          return res.status(500).json({ message: "Internal Server Error" });
-        }
-      }
-
-      req.user = decoded;
-      next();
+    // Verify token using a Promise wrapper to make it clean and modern
+    const decoded = await new Promise((resolve, reject) => {
+      jwt.verify(token, process.env.JWT_SECRET, (err, decodedPayload) => {
+        if (err) reject(err);
+        else resolve(decodedPayload);
+      });
     });
+
+    console.log(`[verifyToken] Token decoded successfully:`, decoded);
+
+    if (decoded.role === "manager") {
+      const manager = await Manager.findOne({
+        $or: [
+          { managerId: decoded.managerId },
+          { mobileNumber: decoded.mobile }
+        ]
+      });
+
+      console.log(`[verifyToken] Manager database lookup result:`, manager);
+
+      if (!manager || manager.isBlocked === true || manager.isBlocked === "true") {
+        console.log(`[verifyToken] Access denied: Manager ${decoded.managerId || decoded.mobile} is blocked or not found.`);
+        return res.status(403).json({ 
+          message: "Aapka account block kar diya gaya hai. Kripya owner se sampark karein." 
+        });
+      }
+    }
+
+    req.user = decoded;
+    next();
   } catch (error) {
-    console.error("Error verifying token:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("[verifyToken] Error verifying token:", error);
+    return res.status(403).json({ message: "Invalid or expired token" });
   }
 };
 
