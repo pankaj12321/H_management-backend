@@ -16,7 +16,8 @@ const {
     handleToEditDriverCommisionEntryByAdmin,
     handleToLoginByManager,
     handleToGetAllManagers,
-    handleToBlockUnblockManager
+    handleToBlockUnblockManager,
+    handleToCheckManagerBlockStatus
 } = require("../controller/admin");
 
 
@@ -37,6 +38,7 @@ router.patch("/edit-driver-commision-entry", verifyToken, handleToEditDriverComm
 
 router.get("/get-managers", verifyToken, handleToGetAllManagers);
 router.patch("/block-unblock-manager", verifyToken, handleToBlockUnblockManager);
+router.get("/check-manager-block-status", verifyToken, handleToCheckManagerBlockStatus);
 
 
 

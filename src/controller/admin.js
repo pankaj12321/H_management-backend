@@ -249,6 +249,40 @@ const handleToBlockUnblockManager = asyncHandler(async (req, res) => {
   }
 });
 
+const handleToCheckManagerBlockStatus = asyncHandler(async (req, res) => {
+  try {
+    const decoded = req.user;
+    if (!decoded) {
+      return res.status(403).json({ message: "Unauthorized! Token required" });
+    }
+
+    if (decoded.role !== "manager") {
+      return res.status(403).json({ message: "This endpoint is for managers only" });
+    }
+
+    const manager = await Manager.findOne({
+      $or: [
+        { managerId: decoded.managerId },
+        { mobileNumber: decoded.mobile }
+      ]
+    });
+
+    if (!manager) {
+      return res.status(404).json({ message: "Manager not found" });
+    }
+
+    res.status(200).json({
+      message: "Manager block status fetched successfully",
+      isBlocked: manager.isBlocked,
+      managerId: manager.managerId,
+      managerName: manager.managerName
+    });
+  } catch (err) {
+    console.error("Error in checking manager block status:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
   try {
     const decoded = req.user;
@@ -282,11 +316,12 @@ const handleToAddTheDriverByAdmin = asyncHandler(async (req, res) => {
 
     const phone = formatIndianPhone(newDriver.mobile);
     const templateName = "driver_add_profile"; // Updated to driver_add_profile
+    const languageCode = "hi"; // Hindi template language for driver onboarding message
 
     // Template variables for 'driver_add_profile' template: (none required)
     const bodyParams = [];
 
-    const response = await sendWhatsAppTemplate(phone, templateName, "en", bodyParams);
+    const response = await sendWhatsAppTemplate(phone, templateName, languageCode, bodyParams);
     console.log(response);
 
     res.status(201).json({ message: "Driver added successfully", driver: newDriver, response });
@@ -606,5 +641,6 @@ module.exports = {
   handleToEditTheDriverProfileByAdmin,
   handleToLoginByManager,
   handleToGetAllManagers,
-  handleToBlockUnblockManager
+  handleToBlockUnblockManager,
+  handleToCheckManagerBlockStatus
 };
