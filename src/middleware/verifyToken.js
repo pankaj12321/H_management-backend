@@ -41,6 +41,11 @@ const verifyToken = async (req, res, next) => {
       }
     }
 
+    // Driver role - no extra DB check needed, token itself is the auth
+    if (decoded.role === "driver") {
+      console.log(`[verifyToken] Driver token verified: driverId=${decoded.driverId}, mobile=${decoded.mobile}`);
+    }
+
     req.user = decoded;
     next();
   } catch (error) {

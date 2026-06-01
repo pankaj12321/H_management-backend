@@ -5,6 +5,9 @@ const staffRouter = require("./staff");
 const attendanceRouter = require('./attendance')
 const transectionRecordRouter = require('./transectionRecord');
 const notesRouter = require('./notes')
+const driverRouter = require('./driver');
+const notificationRoutes =
+  require('./notification');
 
 
 
@@ -29,6 +32,14 @@ const defaultRoutes = [
   {
     path: '/admin/notes',
     route: notesRouter
+  },
+  {
+    path: '/driver',
+    route: driverRouter
+  },
+  {
+    path: '/notification',
+    route: notificationRoutes
   }
 
 ];
